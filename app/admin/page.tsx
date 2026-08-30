@@ -1,8 +1,4 @@
-"Public insert categories" on categories for insert with check (true);
-create policy "Public delete categories" on categories for delete using (true);
-create policy "Public insert team_members" on team_members for insert with check (true);
-create policy "Public delete team_members" on team_members for delete using (true);
-[8/30/2026 10:34 PM] Bro: "use client";
+"use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
@@ -84,7 +80,7 @@ export default function Admin() {
           )}
         </div>
       ))}
-     <div style={panelStyle}>
+      <div style={panelStyle}>
         <h2 style={{ fontSize: 15, marginBottom: 10 }}>Team</h2>
         {team.map((m) => (
           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #EEEBF4" }}>
