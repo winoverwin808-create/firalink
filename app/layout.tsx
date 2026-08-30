@@ -17,13 +17,9 @@ export const metadata: Metadata = {
   description: "Firalink Hub Telegram Mini App",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={${geistSans.variable} ${geistMono.variable} h-full antialiased}>
+    <html lang="en" className={geistSans.variable + " " + geistMono.variable + " h-full antialiased"}>
       <head>
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
       </head>
