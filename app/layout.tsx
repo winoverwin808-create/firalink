@@ -21,8 +21,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={geistSans.variable + " " + geistMono.variable + " h-full antialiased"}>
       <head>
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
-      </head>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
