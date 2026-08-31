@@ -22,7 +22,10 @@ export default function Upload() {
   }, [type]);
 
   async function submit() {
-    if (!title.trim()  !categoryId  !file) {
+    const missingTitle = !title.trim();
+    const missingCategory = !categoryId;
+    const missingFile = !file;
+    if (missingTitle  missingCategory  missingFile) {
       setStatus("Please fill in title, choose a subcategory, and select a file.");
       return;
     }
@@ -32,18 +35,18 @@ export default function Upload() {
     const fileExt = file.name.split(".").pop();
     const filePath = Date.now() + "_" + Math.random().toString(36).slice(2) + "." + fileExt;
 
-    const { error: uploadError } = await supabase.storage.from("uploads").upload(filePath, file);
+    const uploadResult = await supabase.storage.from("uploads").upload(filePath, file);
 
-    if (uploadError) {
-      setStatus("Upload error: " + uploadError.message);
+    if (uploadResult.error) {
+      setStatus("Upload error: " + uploadResult.error.message);
       setUploading(false);
       return;
     }
 
-    const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(filePath);
-    const publicUrl = urlData.publicUrl;
+    const urlData = supabase.storage.from("uploads").getPublicUrl(filePath);
+    const publicUrl = urlData.data.publicUrl;
 
-    const { error } = await supabase.from("works").insert({
+    const insertResult = await supabase.from("works").insert({
       title: title.trim(),
       description: description.trim(),
       category_id: categoryId,
@@ -57,8 +60,8 @@ export default function Upload() {
 
     setUploading(false);
 
-    if (error) {
-      setStatus("Error: " + error.message);
+    if (insertResult.error) {
+      setStatus("Error: " + insertResult.error.message);
     } else {
       setStatus("Posted successfully!");
       setTitle("");
@@ -85,13 +88,13 @@ export default function Upload() {
       <label style={label}>Subcategory</label>
       <select style={inputStyle} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
         <option value="">Select subcategory</option>
-        {categories.map((c) => (
-          <option key={c.id} value={c.id}>{c.name}</option>
-        ))}
+        {categories.map(function (c) {
+          return <option key={c.id} value={c.id}>{c.name}</option>;
+        })}
       </select>
 
       <label style={label}>Title</label>
-      <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Nomad Coffee — Brand Kit" />
+      <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Nomad Coffee Brand Kit" />
 
       <label style={label}>Description</label>
       <textarea style={{ ...inputStyle, minHeight: 70 }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short description" />
@@ -100,12 +103,14 @@ export default function Upload() {
       <input
         type="file"
         style={inputStyle}
-        onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+        onChange={function (e) {
+          setFile(e.target.files ? e.target.files[0] : null);
+        }}
       />
-      {file && <p style={{ fontSize: 12, color: "#6E6B7A", marginTop: -8, marginBottom: 12 }}>Selected: {file.name}</p>}
+      {file ? <p style={{ fontSize: 12, color: "#6E6B7A", marginTop: -8, marginBottom: 12 }}>Selected: {file.name}</p> : null}
 
       <button style={btn} onClick={submit} disabled={uploading}>{uploading ? "Uploading..." : "Post"}</button>
-      {status && <p style={{ marginTop: 12, fontSize: 13, color: status.includes("Error") ? "#D64545" : "#5B1FA6" }}>{status}</p>}
+      {status ? <p style={{ marginTop: 12, fontSize: 13, color: status.indexOf("Error") === 0 ? "#D64545" : "#5B1FA6" }}>{status}</p> : null}
     </div>
   );
 }
