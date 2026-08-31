@@ -25,7 +25,7 @@ export default function Upload() {
     const missingTitle = !title.trim();
     const missingCategory = !categoryId;
     const missingFile = !file;
-    if (missingTitle  missingCategory  missingFile) {
+    if (missingTitle || missingCategory || missingFile) {
       setStatus("Please fill in title, choose a subcategory, and select a file.");
       return;
     }
