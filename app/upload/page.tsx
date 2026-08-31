@@ -1,4 +1,4 @@
-[8/31/2026 3:59 AM] Bro: "use client";
+"use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
