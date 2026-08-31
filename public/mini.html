@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Firalink Hub — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F3F9;
+    --card:#FFFFFF;
+    --card-border:#ECE8F5;
+    --purple-1:#8B2FD9;
+    --purple-2:#5B1FA6;
+    --purple-soft:#F1E9FB;
+    --purple-text:#7C3AED;
+    --orange:#B5620F;
+    --orange-soft:#FBEEE0;
+    --ink:#1A1523;
+    --muted:#6E6B7A;
+    --hair:#EEEBF4;
+    --shadow:0 10px 24px rgba(107,60,180,0.08);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    max-width:430px;
+    margin:0 auto;
+    min-height:100vh;
+    position:relative;
+    padding-bottom:96px;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{text-decoration:none;color:inherit;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 20px 6px;
+  }
+  .logo{display:flex;align-items:center;gap:9px;}
+  .logo-mark{
+    width:32px;height:32px;border-radius:10px;
+    background:linear-gradient(135deg,var(--purple-1),var(--purple-2));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;
+    color:#fff;
+  }
+  .logo-text{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16.5px;letter-spacing:-0.2px;}
+  .top-icons{display:flex;gap:10px;}
+  .icon-btn{
+    width:40px;height:40px;border-radius:50%;
+    background:#fff;border:1px solid var(--card-border);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--muted);
+  }
+
+  /* ---------- greeting ---------- */
+  .greeting{padding:16px 20px 4px;}
+  .greeting h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:23px;margin:0 0 3px;font-weight:600;color:var(--ink);
+  }
+  .greeting p{margin:0;color:var(--muted);font-size:13.5px;}
+
+  /* ---------- section shell ---------- */
+  .section{padding:20px 20px 4px;}
+  .section-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .section-head h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16.5px;margin:0;font-weight:600;
+  }
+  .section-head .see-all{font-size:12px;color:var(--purple-text);font-weight:600;}
+
+  /* ---------- hero purple card ---------- */
+  .hero-card{
+    margin:18px 20px 0;
+    border-radius:var(--radius);
+    padding:24px 22px;
+    background:linear-gradient(135deg,var(--purple-1),var(--purple-2));
+    display:flex;gap:16px;align-items:flex-start;
+    box-shadow:0 14px 30px rgba(91,31,166,0.28);
+    position:relative;
+  }
+  .hero-icon{
+    width:52px;height:52px;border-radius:15px;flex:0 0 auto;
+    background:rgba(255,255,255,0.18);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;
+  }
+  .hero-text .eyebrow{
+    font-size:11px;letter-spacing:0.09em;font-weight:700;
+    color:rgba(255,255,255,0.75);text-transform:uppercase;
+    display:block;margin-bottom:6px;
+  }
+  .hero-text h2{
+    font-family:'Space Grotesk',sans-serif;color:#fff;
+    font-size:21px;margin:0 0 8px;font-weight:600;
+  }
+  .hero-text p{
+    margin:0;color:rgba(255,255,255,0.82);font-size:13px;line-height:1.5;
+    max-width:230px;
+  }
+  .hero-arrow{
+    position:absolute;top:22px;right:20px;
+    width:34px;height:34px;border-radius:50%;
+    background:rgba(255,255,255,0.16);
+    display:flex;align-items:center;justify-content:center;color:#fff;
+  }
+
+  /* ---------- white status cards ---------- */
+  .status-card{
+    margin:16px 20px 0;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:var(--radius);
+    padding:22px 20px 20px;
+    box-shadow:var(--shadow);
+  }
+  .status-top{display:flex;align-items:flex-start;justify-content:space-between;}
+  .status-eyebrow{
+    font-size:11px;letter-spacing:0.08em;font-weight:700;text-transform:uppercase;
+  }
+  .status-eyebrow.purple{color:var(--purple-text);}
+  .status-eyebrow.orange{color:var(--orange);}
+  .status-icon{
+    width:34px;height:34px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .status-icon.purple{background:var(--purple-soft);color:var(--purple-text);}
+  .status-icon.orange{background:var(--orange-soft);color:var(--orange);}
+  .status-card h3{
+    font-size:19px;margin:12px 0 4px;font-weight:700;line-height:1.3;
+  }
+  .status-card p{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.5;}
+  .btn-gradient{
+    display:block;width:100%;text-align:center;
+    background:linear-gradient(135deg,var(--purple-1),var(--purple-2));
+    color:#fff;font-weight:700;font-size:14.5px;
+    padding:15px 0;border-radius:15px;
+    box-shadow:0 10px 18px rgba(91,31,166,0.25);
+  }
+
+  /* ---------- rails / cards ---------- */
+  .rail{
+    display:flex;gap:14px;overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    margin:0 -20px;padding:0 20px 6px;
+  }
+  .rail::-webkit-scrollbar{display:none;}
+  .card{
+    scroll-snap-align:start;flex:0 0 208px;
+    background:var(--card);border:1px solid var(--card-border);
+    border-radius:18px;overflow:hidden;box-shadow:var(--shadow);
+  }
+  .thumb{position:relative;height:126px;}
+  .thumb.g1{background:linear-gradient(150deg,#9B5CFC,#5B1FA6);}
+  .thumb.g2{background:linear-gradient(150deg,#FF7AB0,#B5307E);}
+  .thumb.g3{background:linear-gradient(150deg,#4FD8C2,#0E8A78);}
+  .corner-tab{
+    position:absolute;top:10px;left:10px;
+    background:rgba(255,255,255,0.92);
+    padding:4px 9px;border-radius:8px;
+    font-size:10px;font-weight:700;letter-spacing:0.03em;color:var(--purple-2);
+  }
+  .play-dot{
+    position:absolute;top:10px;right:10px;
+    width:28px;height:28px;border-radius:50%;
+    background:rgba(0,0,0,0.35);
+    display:flex;align-items:center;justify-content:center;color:#fff;
+  }
+  .card-body{padding:12px 13px 14px;}
+  .card-body h4{margin:0 0 6px;font-size:13.5px;font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .creator-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+  .avatar{width:18px;height:18px;border-radius:50%;background:var(--purple-soft);flex:0 0 auto;}
+  .creator-row span{font-size:11.5px;color:var(--muted);}
+  .stat-row{
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--hair);padding-top:10px;
+  }
+  .stat-icons{display:flex;gap:11px;color:var(--muted);}
+  .stat-icons svg{width:14px;height:14px;}
+  .dl-btn{
+    width:26px;height:26px;border-radius:8px;
+    background:var(--purple-soft);color:var(--purple-text);
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ---------- featured grid ---------- */
+  .featured-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .feat-card{
+    border-radius:18px;overflow:hidden;background:var(--card);
+    border:1px solid var(--card-border);box-shadow:var(--shadow);
+  }
+  .feat-thumb{height:108px;position:relative;}
+  .feat-thumb.f1{background:linear-gradient(160deg,#FF7AB0,#9B5CFC);}
+  .feat-thumb.f2{background:linear-gradient(160deg,#4FD8C2,#5B1FA6);}
+  .star-badge{
+    position:absolute;top:8px;left:8px;
+    background:rgba(255,255,255,0.92);border-radius:7px;
+    padding:3px 8px;display:flex;align-items:center;gap:4px;
+    font-size:10px;font-weight:700;color:var(--purple-2);
+  }
+  .feat-body{padding:10px 11px 12px;}
+  .feat-body h4{margin:0 0 3px;font-size:12.5px;font-weight:700;}
+  .feat-body p{margin:0;font-size:10.5px;color:var(--muted);}
+
+  /* ---------- AI panel ---------- */
+  .ai-panel{
+    margin:0 20px;border-radius:var(--radius);
+    padding:22px 20px;background:var(--purple-soft);
+    border:1px solid #E4D6FA;
+  }
+  .ai-panel .eyebrow{
+    font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--purple-text);display:block;margin-bottom:8px;
+  }
+  .ai-panel h2{font-family:'Space Grotesk',sans-serif;font-size:19px;margin:0 0 8px;}
+  .ai-panel p{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.5;max-width:90%;}
+  .ai-cta{
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--ink);color:#fff;font-weight:700;font-size:12.5px;
+    padding:10px 16px;border-radius:12px;
+  }
+
+  /* ---------- services ---------- */
+  .services-row{display:flex;gap:10px;}
+  .service-chip{
+    flex:1;background:var(--card);border:1px solid var(--card-border);
+    border-radius:16px;padding:16px 8px 13px;text-align:center;box-shadow:var(--shadow);
+  }
+  .service-chip .ic{
+    width:34px;height:34px;border-radius:10px;margin:0 auto 10px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--purple-soft);color:var(--purple-text);
+  }
+  .service-chip span{font-size:11.5px;font-weight:700;}
+
+  /* ---------- team rail ---------- */
+  .team-card{scroll-snap-align:start;flex:0 0 122px;text-align:center;}
+  .team-photo{
+    width:76px;height:76px;border-radius:50%;margin:0 auto 10px;
+    border:3px solid #fff;box-shadow:var(--shadow);
+  }
+  .team-photo.t1{background:linear-gradient(160deg,#9B5CFC,#5B1FA6);}
+  .team-photo.t2{background:linear-gradient(160deg,#FF7AB0,#B5307E);}
+  .team-photo.t3{background:linear-gradient(160deg,#4FD8C2,#0E8A78);}
+  .team-photo.t4{background:linear-gradient(160deg,#FFC15C,#B5730F);}
+  .team-card h4{margin:0 0 2px;font-size:12.5px;font-weight:700;}
+  .team-card p{margin:0;font-size:10.5px;color:var(--muted);}
+
+  /* ---------- recommended list ---------- */
+  .rec-list{
+    background:var(--card);border:1px solid var(--card-border);
+    border-radius:var(--radius);padding:6px 16px;box-shadow:var(--shadow);
+  }
+  .rec-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--hair);}
+  .rec-item:last-child{border-bottom:none;}
+  .rec-thumb{width:50px;height:50px;border-radius:12px;flex:0 0 auto;}
+  .rec-thumb.r1{background:linear-gradient(150deg,#FFC15C,#B5730F);}
+  .rec-thumb.r2{background:linear-gradient(150deg,#9B5CFC,#5B1FA6);}
+  .rec-thumb.r3{background:linear-gradient(150deg,#4FD8C2,#0E8A78);}
+  .rec-info{flex:1;min-width:0;}
+  .rec-info h4{margin:0 0 2px;font-size:13px;font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rec-info p{margin:0;font-size:11px;color:var(--muted);}
+  .rec-star{color:var(--purple-text);font-weight:700;font-size:11.5px;flex:0 0 auto;}
+
+  /* ---------- CTA banner ---------- */
+  .cta-banner{
+    margin:28px 20px 10px;border-radius:var(--radius);
+    padding:26px 22px;text-align:center;
+    background:linear-gradient(135deg,var(--purple-1),var(--purple-2));
+    box-shadow:0 14px 30px rgba(91,31,166,0.28);
+  }
+  .cta-banner h3{
+    font-family:'Space Grotesk',sans-serif;font-size:17px;margin:0 0 14px;color:#fff;
+  }
+  .cta-btn{
+    display:inline-block;background:#fff;color:var(--purple-2);
+    font-weight:700;font-size:13px;padding:12px 24px;border-radius:13px;
+  }
+
+  /* ---------- bottom nav ---------- */
+  .bottom-nav{
+    position:fixed;left:50%;transform:translateX(-50%);
+    bottom:0;width:100%;max-width:430px;
+    background:#fff;border-top:1px solid var(--card-border);
+    display:flex;justify-content:space-around;
+    padding:12px 6px calc(10px + env(safe-area-inset-bottom));
+  }
+  .nav-item{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:#A6A3B0;font-size:10px;font-weight:600;
+  }
+  .nav-item svg{width:21px;height:21px;}
+  .nav-item.active{color:var(--purple-text);}
+  .nav-dot{width:4px;height:4px;border-radius:50%;background:var(--purple-text);margin-top:1px;}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark">F</div>
+      <div class="logo-text">Firalink Hub</div>
+    </div>
+    <div class="top-icons">
+      <div class="icon-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </div>
+      <div class="icon-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="greeting">
+    <h1>Good morning, team 👋</h1>
+    <p>3 new uploads and 12 reactions since yesterday</p>
+  </div>
+
+  <!-- Hero: Live AI Studio -->
+  <div class="hero-card">
+    <div class="hero-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v5M9 22h6"/></svg>
+    </div>
+    <div class="hero-text">
+      <span class="eyebrow">Live AI Studio</span>
+      <h2>Talk to Firalink AI</h2>
+      <p>Speak naturally to search projects, request edits, or get creative feedback</p>
+    </div>
+    <div class="hero-arrow">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m0 0l-6-6m6 6l-6 6"/></svg>
+    </div>
+  </div>
+
+  <!-- Current project card -->
+  <div class="status-card">
+    <div class="status-top">
+      <span class="status-eyebrow purple">Current Project</span>
+      <div class="status-icon purple">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7l8-4 8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4"/></svg>
+      </div>
+    </div>
+    <h3>Nomad Coffee — Brand Kit</h3>
+    <p>3 of 5 deliverables uploaded</p>
+    <a class="btn-gradient" href="#">Continue Project</a>
+  </div>
+
+  <!-- Feedback needed card -->
+  <div class="status-card">
+    <div class="status-top">
+      <span class="status-eyebrow orange">Feedback Needed</span>
+      <div class="status-icon orange">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-1.2 4.4L21 20l-4.3-1.1a8.4 8.4 0 1 1 4.3-7.4z"/></svg>
+      </div>
+    </div>
+    <h3>Review Client Comments</h3>
+    <p>2 comments are waiting on the Aster App launch reel.</p>
+    <a class="btn-gradient" href="#">View Comments →</a>
+  </div>
+
+  <!-- Latest Works -->
+  <div class="section">
+    <div class="section-head">
+      <h2>Latest Works</h2>
+      <a class="see-all" href="#">See all</a>
+    </div>
+    <div class="rail">
+      <div class="card">
+        <div class="thumb g1"><div class="corner-tab">PNG</div></div>
+        <div class="card-body">
+          <h4>Nomad Coffee — Brand Kit</h4>
+          <div class="creator-row"><div class="avatar"></div><span>Selam A.</span></div>
+          <div class="stat-row">
+            <div class="stat-icons">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4A9 9 0 0 1 3 15.5C3 10.8 6.8 7 11.5 7A8.4 8.4 0 0 1 21 11.5z"/></svg>
+            </div>
+            <div class="dl-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="thumb g2"><div class="corner-tab">MP4</div><div class="play-dot"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="card-body">
+          <h4>Launch Reel — Aster App</h4>
+          <div class="creator-row"><div class="avatar"></div><span>Dawit M.</span></div>
+          <div class="stat-row">
+            <div class="stat-icons">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4A9 9 0 0 1 3 15.5C3 10.8 6.8 7 11.5 7A8.4 8.4 0 0 1 21 11.5z"/></svg>
+            </div>
+            <div class="dl-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="thumb g3"><div class="corner-tab">PDF</div></div>
+        <div class="card-body">
+          <h4>Q3 Client Proposal</h4>
+          <div class="creator-row"><div class="avatar"></div><span>Hana T.</span></div>
+          <div class="stat-row">
+            <div class="stat-icons">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4A9 9 0 0 1 3 15.5C3 10.8 6.8 7 11.5 7A8.4 8.4 0 0 1 21 11.5z"/></svg>
+            </div>
+            <div class="dl-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Works -->
+  <div class="section">
+    <div class="section-head">
+      <h2>Featured Works</h2>
+      <a class="see-all" href="#">See all</a>
+    </div>
+    <div class="featured-grid">
+      <div class="feat-card">
+        <div class="feat-thumb f1">
+          <div class="star-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.7 1.3 7-6.3-3.6L5.7 21l1.3-7-5-4.7 7.1-.7z"/></svg>
+            Featured
+          </div>
+        </div>
+        <div class="feat-body"><h4>Sunset Line — Packaging</h4><p>Selam A. · Graphics</p></div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-thumb f2">
+          <div class="star-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.7 1.3 7-6.3-3.6L5.7 21l1.3-7-5-4.7 7.1-.7z"/></svg>
+            Featured
+          </div>
+        </div>
+        <div class="feat-body"><h4>Motion Identity Reel</h4><p>Dawit M. · Video</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Future -->
+  <div class="section" style="padding-left:0;padding-right:0;">
+    <div class="ai-panel">
+      <span class="eyebrow">What's Next</span>
+      <h2>AI is joining the crew.</h2>
+      <p>Smart tagging, auto-recommendations, and creative assist tools are coming to help the team work faster — without touching the craft.</p>
+      <a class="ai-cta" href="#">Learn more
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m0 0l-6-6m6 6l-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <div class="section">
+    <div class="section-head"><h2>Our Services</h2></div>
+    <div class="services-row">
+      <div class="service-chip">
+        <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <span>Graphics Design</span>
+      </div>
+      <div class="service-chip">
+        <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M22 8l-5 4 5 4V8z"/></svg></div>
+        <span>Video Production</span>
+      </div>
+      <div class="service-chip">
+        <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+        <span>Documents</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Highlights -->
+  <div class="section">
+    <div class="section-head">
+      <h2>Team Highlights</h2>
+      <a class="see-all" href="#">All 4</a>
+    </div>
+    <div class="rail">
+      <div class="team-card"><div class="team-photo t1"></div><h4>Selam A.</h4><p>Graphic Designer</p></div>
+      <div class="team-card"><div class="team-photo t2"></div><h4>Dawit M.</h4><p>Video Editor</p></div>
+      <div class="team-card"><div class="team-photo t3"></div><h4>Hana T.</h4><p>Copy &amp; Docs</p></div>
+      <div class="team-card"><div class="team-photo t4"></div><h4>Nahom K.</h4><p>3D &amp; Motion</p></div>
+    </div>
+  </div>
+
+  <!-- Recommended -->
+  <div class="section">
+    <div class="section-head"><h2>Recommended Works</h2></div>
+    <div class="rec-list">
+      <div class="rec-item">
+        <div class="rec-thumb r1"></div>
+        <div class="rec-info"><h4>Habesha Coffee — Full Rebrand</h4><p>Selam A. · Graphics</p></div>
+        <div class="rec-star">★ 48</div>
+      </div>
+      <div class="rec-item">
+        <div class="rec-thumb r2"></div>
+        <div class="rec-info"><h4>Wedding Highlight Cut</h4><p>Dawit M. · Video</p></div>
+        <div class="rec-star">★ 36</div>
+      </div>
+      <div class="rec-item">
+        <div class="rec-thumb r3"></div>
+        <div class="rec-info"><h4>Investor Deck Template</h4><p>Hana T. · Documents</p></div>
+        <div class="rec-star">★ 29</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-banner">
+    <h3>Have an idea? Let's create it together.</h3>
+    <a class="cta-btn" href="#">Start a Request</a>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      Home
+      <div class="nav-dot"></div>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+      Graphics
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M22 8l-5 4 5 4V8z"/></svg>
+      Video
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      Documents
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.7.5 4.5 2.6 4.5 5.8"/></svg>
+      Team
+    </a>
+  </div>
+
+</body>
+</html>
