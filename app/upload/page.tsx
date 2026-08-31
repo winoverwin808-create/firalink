@@ -1,4 +1,4 @@
-"use client";
+[8/31/2026 3:59 AM] Bro: "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
@@ -8,9 +8,9 @@ export default function Upload() {
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
-  const [fileType, setFileType] = useState("png");
+  const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     async function loadCats() {
@@ -22,28 +22,48 @@ export default function Upload() {
   }, [type]);
 
   async function submit() {
-    if (!title.trim() || !categoryId) {
-      setStatus("Please fill in title and choose a subcategory.");
+    if (!title.trim()  !categoryId  !file) {
+      setStatus("Please fill in title, choose a subcategory, and select a file.");
       return;
     }
+    setUploading(true);
+    setStatus("Uploading...");
+
+    const fileExt = file.name.split(".").pop();
+    const filePath = Date.now() + "_" + Math.random().toString(36).slice(2) + "." + fileExt;
+
+    const { error: uploadError } = await supabase.storage.from("uploads").upload(filePath, file);
+
+    if (uploadError) {
+      setStatus("Upload error: " + uploadError.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(filePath);
+    const publicUrl = urlData.publicUrl;
+
     const { error } = await supabase.from("works").insert({
       title: title.trim(),
       description: description.trim(),
       category_id: categoryId,
-      file_url: fileUrl.trim(),
-      file_type: fileType,
+      file_url: publicUrl,
+      file_type: fileExt,
       likes: 0,
       shares: 0,
       recommends: 0,
       views: 0,
     });
+
+    setUploading(false);
+
     if (error) {
       setStatus("Error: " + error.message);
     } else {
       setStatus("Posted successfully!");
       setTitle("");
       setDescription("");
-      setFileUrl("");
+      setFile(null);
     }
   }
 
@@ -76,19 +96,15 @@ export default function Upload() {
       <label style={label}>Description</label>
       <textarea style={{ ...inputStyle, minHeight: 70 }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short description" />
 
-      <label style={label}>File Link (upload to Google Drive/Dropbox and paste link)</label>
-      <input style={inputStyle} value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://..." />
+      <label style={label}>Upload File</label>
+      <input
+        type="file"
+        style={inputStyle}
+        onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+      />
+      {file && <p style={{ fontSize: 12, color: "#6E6B7A", marginTop: -8, marginBottom: 12 }}>Selected: {file.name}</p>}
 
-      <label style={label}>File Type</label>
-      <select style={inputStyle} value={fileType} onChange={(e) => setFileType(e.target.value)}>
-        <option value="png">PNG</option>
-        <option value="jpg">JPG</option>
-        <option value="mp4">MP4</option>
-        <option value="pdf">PDF</option>
-        <option value="docx">DOCX</option>
-      </select>
-
-      <button style={btn} onClick={submit}>Post</button>
+      <button style={btn} onClick={submit} disabled={uploading}>{uploading ? "Uploading..." : "Post"}</button>
       {status && <p style={{ marginTop: 12, fontSize: 13, color: status.includes("Error") ? "#D64545" : "#5B1FA6" }}>{status}</p>}
     </div>
   );
