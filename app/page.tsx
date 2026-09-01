@@ -73,9 +73,10 @@ export default function Home() {
   const sheet = { background: "#fff", width: "100%", maxWidth: 430, borderRadius: "22px 22px 0 0", padding: 20, maxHeight: "70vh", overflowY: "auto" as const };
   const inputStyle = { width: "100%", border: "1px solid #ECE8F5", borderRadius: 10, padding: "10px 12px", fontSize: 13, marginBottom: 12, boxSizing: "border-box" as const };
   const btn = { width: "100%", background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", color: "#fff", fontWeight: 700, fontSize: 14, padding: "12px 0", borderRadius: 12, border: "none", cursor: "pointer" };
+  const navItem = { fontSize: 10, fontWeight: 600, color: "#A6A3B0", textAlign: "center" as const, display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4 };
 
   return (
-    <div style={{ fontFamily: "Inter, sans-serif", color: "#1A1523", background: "#F5F3F9", maxWidth: 430, margin: "0 auto", minHeight: "100vh", paddingBottom: 60 }}>
+    <div style={{ fontFamily: "Inter, sans-serif", color: "#1A1523", background: "#F5F3F9", maxWidth: 430, margin: "0 auto", minHeight: "100vh", paddingBottom: 90 }}>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 20px 6px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
@@ -83,6 +84,7 @@ export default function Home() {
           <div style={{ fontFamily: "Space Grotesk, sans-serif", fontWeight: 700, fontSize: 16.5 }}>Firalink Hub</div>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
+          <div style={iconBtn}>🔍</div>
           <div style={iconBtn} onClick={openNotif}>
             🔔
             {unreadCount > 0 ? (
@@ -99,6 +101,16 @@ export default function Home() {
         <p style={{ margin: 0, color: "#6E6B7A", fontSize: 13.5 }}>{categories.length} categories loaded from Supabase</p>
       </div>
 
+      <div style={{ margin: "18px 20px 0", borderRadius: 22, padding: 24, background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", boxShadow: "0 14px 30px rgba(91,31,166,0.28)", display: "flex", gap: 16, position: "relative" as const }}>
+        <div style={{ width: 52, height: 52, borderRadius: 15, flex: "0 0 auto", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 22 }}>🎙️</div>
+        <div>
+          <span style={{ fontSize: 11, letterSpacing: "0.09em", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase" as const, display: "block", marginBottom: 6 }}>Live AI Studio</span>
+          <div style={{ fontFamily: "Space Grotesk, sans-serif", color: "#fff", fontSize: 21, marginBottom: 8, fontWeight: 600 }}>Talk to Firalink AI</div>
+          <p style={{ margin: 0, color: "rgba(255,255,255,0.82)", fontSize: 13, lineHeight: 1.5, maxWidth: 230 }}>Speak naturally to search projects, request edits, or get feedback</p>
+        </div>
+        <div style={{ position: "absolute" as const, top: 22, right: 20, width: 34, height: 34, borderRadius: 999, background: "rgba(255,255,255,0.16)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>→</div>
+      </div>
+
       {["graphics", "video", "documents"].map(function (type) {
         return (
           <div style={{ padding: "20px 20px 4px" }} key={type}>
@@ -107,6 +119,7 @@ export default function Home() {
               {grouped[type].map(function (cat) {
                 return <div style={card} key={cat.id}>{cat.name}</div>;
               })}
+              {grouped[type].length === 0 ? <p style={{ color: "#6E6B7A", fontSize: 13 }}>No subcategories yet.</p> : null}
             </div>
           </div>
         );
@@ -133,6 +146,14 @@ export default function Home() {
         >
           Start a Request
         </div>
+      </div>
+
+      <div style={{ position: "fixed" as const, left: "50%", transform: "translateX(-50%)", bottom: 0, width: "100%", maxWidth: 430, background: "#fff", borderTop: "1px solid #ECE8F5", display: "flex", justifyContent: "space-around", padding: "12px 6px", boxSizing: "border-box" as const }}>
+        <div style={{ ...navItem, color: "#7C3AED" }}><span>🏠</span>Home</div>
+        <div style={navItem}><span>🎨</span>Graphics</div>
+        <div style={navItem}><span>🎬</span>Video</div>
+        <div style={navItem}><span>📄</span>Docs</div>
+        <div style={navItem}><span>👥</span>Team</div>
       </div>
 
       {showForm ? (
