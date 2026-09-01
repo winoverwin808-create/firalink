@@ -24,3 +24,65 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Firalink Hub motion system */
+@keyframes fh-fade-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fh-sheet-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fh-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fh-section {
+  animation: fh-fade-slide-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fh-overlay {
+  animation: fh-fade-in 0.2s ease both;
+}
+
+.fh-sheet {
+  animation: fh-sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fh-hover-lift {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.fh-hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.fh-hover-scale {
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.fh-hover-scale:hover {
+  transform: scale(1.03);
+}
+.fh-hover-scale:active {
+  transform: scale(0.98);
+}
+
+.fh-chevron {
+  transition: transform 0.2s ease;
+}
+
+.fh-expand {
+  animation: fh-fade-slide-up 0.25s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-section, .fh-overlay, .fh-sheet, .fh-expand {
+    animation: none !important;
+  }
+  .fh-hover-lift, .fh-hover-scale {
+    transition: none !important;
+  }
+}
