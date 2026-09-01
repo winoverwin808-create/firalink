@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../supabase";
 
 export default function Upload() {
+  const router = useRouter();
   const [type, setType] = useState("graphics");
   const [categories, setCategories] = useState<any[]>([]);
   const [categoryId, setCategoryId] = useState("");
@@ -75,8 +77,11 @@ export default function Upload() {
   const btn = { width: "100%", background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", color: "#fff", fontWeight: 700, fontSize: 14, padding: "12px 0", borderRadius: 12, border: "none", cursor: "pointer" };
 
   return (
-    <div style={{ fontFamily: "Inter, sans-serif", background: "#F5F3F9", minHeight: "100vh", maxWidth: 430, margin: "0 auto", padding: 20 }}>
-      <h1 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 22, marginBottom: 20 }}>Post New Work</h1>
+    <div style={{ fontFamily: "Inter, sans-serif", background: "#F5F3F9", minHeight: "100vh", maxWidth: 430, width: "100%", margin: "0 auto", padding: 20, overflowX: "hidden" as const, boxSizing: "border-box" as const }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        <div className="fh-hover-scale" style={{ width: 36, height: 36, borderRadius: 999, background: "#fff", border: "1px solid #ECE8F5", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flex: "0 0 auto" }} onClick={function () { router.push("/"); }}>←</div>
+        <h1 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 22, margin: 0 }}>Post New Work</h1>
+      </div>
 
       <label style={label}>Category</label>
       <select style={inputStyle} value={type} onChange={(e) => setType(e.target.value)}>

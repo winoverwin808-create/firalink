@@ -3,6 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "./supabase";
 
+const IMAGE_TYPES = ["jpg", "jpeg", "png", "gif", "webp", "svg", "avif"];
+const VIDEO_TYPES = ["mp4", "mov", "webm", "m4v"];
+
+function isImageType(ft: string) {
+  return IMAGE_TYPES.indexOf((ft || "").toLowerCase()) !== -1;
+}
+function isVideoType(ft: string) {
+  return VIDEO_TYPES.indexOf((ft || "").toLowerCase()) !== -1;
+}
+
 export default function Home() {
   const router = useRouter();
 
@@ -10,6 +20,7 @@ export default function Home() {
   const [team, setTeam] = useState<any[]>([]);
   const [works, setWorks] = useState<any[]>([]);
   const [ideas, setIdeas] = useState<any[]>([]);
+  const [heroVideoUrl, setHeroVideoUrl] = useState<string | null>(null);
   const [showNotif, setShowNotif] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [ideaName, setIdeaName] = useState("");
@@ -40,10 +51,12 @@ export default function Home() {
     const membersResult = await supabase.from("team_members").select("*");
     const worksResult = await supabase.from("works").select("*").order("created_at", { ascending: false });
     const ideasResult = await supabase.from("ideas").select("*").order("created_at", { ascending: false });
+    const heroResult = await supabase.from("hero_video").select("*").eq("id", 1).maybeSingle();
     if (catsResult.data) setCategories(catsResult.data);
     if (membersResult.data) setTeam(membersResult.data);
     if (worksResult.data) setWorks(worksResult.data);
     if (ideasResult.data) setIdeas(ideasResult.data);
+    if (heroResult.data) setHeroVideoUrl(heroResult.data.video_url || null);
   }
 
   useEffect(function () {
@@ -105,6 +118,7 @@ export default function Home() {
     const insertResult = await supabase.from("ideas").insert({
       name: ideaName.trim() || "Anonymous",
       message: ideaMessage.trim(),
+      status: "pending",
     });
     if (insertResult.error) {
       setIdeaStatus("Error: " + insertResult.error.message);
@@ -168,11 +182,6 @@ export default function Home() {
     setTimeout(function () { scrollToSection("team"); }, 60);
   }
 
-  function goToAboutSection() {
-    setActiveNav("home");
-    setTimeout(function () { scrollToSection("about"); }, 60);
-  }
-
   // Search: gather matches across categories, works, team, and static pages/sections
   const q = searchQuery.trim().toLowerCase();
   const searchActive = q.length > 0;
@@ -186,8 +195,7 @@ export default function Home() {
     return (m.name || "").toLowerCase().includes(q) || (m.role || "").toLowerCase().includes(q);
   }) : [];
   const staticPages = [
-    { label: "About Us", sub: "Purpose, services & how it works", key: "about" },
-    { label: "About Firalink Hub (full guide)", sub: "The complete platform guide", href: "/about" },
+    { label: "About Us", sub: "Purpose, services & how it works", href: "/about" },
     { label: "Our Services", sub: "Graphics, video & documents", key: "services" },
     { label: "Team Highlights", sub: "Meet the crew", key: "team" },
     { label: "Have an idea?", sub: "Submit a request", key: "cta" },
@@ -224,7 +232,7 @@ export default function Home() {
     setTimeout(function () { scrollToSection(p.key); }, 60);
   }
 
-  const cardChip = { background: "#fff", border: "1px solid #ECE8F5", borderRadius: 14, padding: "10px 14px", fontSize: 13, fontWeight: 600, boxShadow: "0 10px 24px rgba(107,60,180,0.08)", cursor: "pointer" as const };
+  const cardChip = { background: "#fff", border: "1px solid #ECE8F5", borderRadius: 14, padding: "10px 14px", fontSize: 13, fontWeight: 600, boxShadow: "0 10px 24px rgba(107,60,180,0.08)", cursor: "pointer" as const, wordBreak: "break-word" as const };
   const cardChipActive = { ...cardChip, background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", color: "#fff", boxShadow: "0 10px 24px rgba(91,31,166,0.25)" };
   const sectionTitle = { fontFamily: "Space Grotesk, sans-serif", fontSize: 16.5, margin: "0 0 14px", fontWeight: 600 };
   const iconBtn = { width: 40, height: 40, borderRadius: 999, background: "#fff", border: "1px solid #ECE8F5", display: "flex", alignItems: "center", justifyContent: "center", color: "#6E6B7A", cursor: "pointer", position: "relative" as const };
@@ -235,23 +243,36 @@ export default function Home() {
   const navItem = { fontSize: 10, fontWeight: 600, color: "#A6A3B0", textAlign: "center" as const, display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4, cursor: "pointer" as const };
   const navItemActive = { ...navItem, color: "#7C3AED" };
   const workCard = { flex: "0 0 200px", background: "#fff", border: "1px solid #ECE8F5", borderRadius: 18, overflow: "hidden", boxShadow: "0 10px 24px rgba(107,60,180,0.08)" };
-  const thumb = { height: 120, background: "linear-gradient(150deg,#9B5CFC,#5B1FA6)", position: "relative" as const };
+  const thumb = { height: 120, background: "linear-gradient(150deg,#9B5CFC,#5B1FA6)", position: "relative" as const, overflow: "hidden" as const };
   const tinyBtn = { fontSize: 11, color: "#6E6B7A", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, marginRight: 12 };
   const catHeader = { display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 18, padding: "14px 16px", boxShadow: "0 10px 24px rgba(107,60,180,0.08)", cursor: "pointer" as const };
   const catIcon = { width: 42, height: 42, borderRadius: 13, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flex: "0 0 auto" };
   const searchResultRow = { display: "flex", alignItems: "center", gap: 12, padding: "12px 4px", borderBottom: "1px solid #EEEBF4", cursor: "pointer" as const };
   const searchResultIcon = { width: 36, height: 36, borderRadius: 10, background: "#F1E9FB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flex: "0 0 auto" };
+  const wordSafe = { wordBreak: "break-word" as const, overflowWrap: "anywhere" as const };
+  const statusBadge = { fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999, display: "inline-block" };
+
+  function renderThumbMedia(w: any) {
+    if (isImageType(w.file_type)) {
+      return <img src={w.file_url} alt={w.title} style={{ width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }} />;
+    }
+    if (isVideoType(w.file_type)) {
+      return <video src={w.file_url} muted preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }} />;
+    }
+    return null;
+  }
 
   function renderWorkCard(w: any) {
     const isHighlighted = highlightWorkId === w.id;
     return (
       <div className="fh-hover-lift" style={{ ...workCard, boxShadow: isHighlighted ? "0 0 0 3px #8B2FD9" : workCard.boxShadow }} key={w.id}>
         <div style={thumb}>
+          {renderThumbMedia(w)}
           <div style={{ position: "absolute" as const, top: 10, left: 10, background: "rgba(255,255,255,0.92)", padding: "4px 9px", borderRadius: 8, fontSize: 10, fontWeight: 700, color: "#5B1FA6" }}>{(w.file_type || "").toUpperCase()}</div>
         </div>
         <div style={{ padding: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" as const }}>{w.title}</div>
-          <div style={{ fontSize: 11, color: "#6E6B7A", marginBottom: 10 }}>{creatorName(w.creator_id)} · {categoryName(w.category_id)}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, ...wordSafe, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{w.title}</div>
+          <div style={{ fontSize: 11, color: "#6E6B7A", marginBottom: 10, ...wordSafe }}>{creatorName(w.creator_id)} · {categoryName(w.category_id)}</div>
           <div style={{ borderTop: "1px solid #EEEBF4", paddingTop: 8, display: "flex", flexWrap: "wrap" as const }}>
             <span style={tinyBtn} onClick={function () { likeWork(w.id, w.likes); }}>❤️ {w.likes || 0}</span>
             <span style={tinyBtn} onClick={function () { recommendWork(w.id, w.recommends); }}>⭐ {w.recommends || 0}</span>
@@ -271,7 +292,7 @@ export default function Home() {
   }
 
   return (
-    <div style={{ fontFamily: "Inter, sans-serif", color: "#1A1523", background: "#F5F3F9", maxWidth: 430, margin: "0 auto", minHeight: "100vh", paddingBottom: 90, position: "relative" as const }}>
+    <div style={{ fontFamily: "Inter, sans-serif", color: "#1A1523", background: "#F5F3F9", maxWidth: 430, width: "100%", margin: "0 auto", minHeight: "100vh", paddingBottom: 90, position: "relative" as const, overflowX: "hidden" as const }}>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 20px 6px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
@@ -296,14 +317,17 @@ export default function Home() {
         <p style={{ margin: 0, color: "#6E6B7A", fontSize: 13.5 }}>{categories.length} categories loaded from Supabase</p>
       </div>
 
-      <div className="fh-section" style={{ ...fade(), margin: "18px 20px 0", borderRadius: 22, padding: 24, background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", boxShadow: "0 14px 30px rgba(91,31,166,0.28)", display: "flex", gap: 16, position: "relative" as const }}>
-        <div style={{ width: 52, height: 52, borderRadius: 15, flex: "0 0 auto", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 22 }}>🎙️</div>
-        <div>
-          <span style={{ fontSize: 11, letterSpacing: "0.09em", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase" as const, display: "block", marginBottom: 6 }}>Live AI Studio</span>
-          <div style={{ fontFamily: "Space Grotesk, sans-serif", color: "#fff", fontSize: 21, marginBottom: 8, fontWeight: 600 }}>Talk to Firalink AI</div>
-          <p style={{ margin: 0, color: "rgba(255,255,255,0.82)", fontSize: 13, lineHeight: 1.5, maxWidth: 230 }}>Speak naturally to search projects, request edits, or get feedback</p>
+      <div className="fh-section" style={{ ...fade(), margin: "18px 20px 0", borderRadius: 22, padding: 20, background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", boxShadow: "0 14px 30px rgba(91,31,166,0.28)" }}>
+        <span style={{ fontSize: 11, letterSpacing: "0.09em", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase" as const, display: "block", marginBottom: 6 }}>Live AI Studio</span>
+        <div style={{ fontFamily: "Space Grotesk, sans-serif", color: "#fff", fontSize: 20, marginBottom: 8, fontWeight: 600 }}>Talk to Firalink AI</div>
+        <p style={{ margin: "0 0 14px", color: "rgba(255,255,255,0.82)", fontSize: 13, lineHeight: 1.5, maxWidth: 260 }}>A quick intro to what the hub can do</p>
+        <div style={{ borderRadius: 16, overflow: "hidden", background: "rgba(255,255,255,0.12)" }}>
+          {heroVideoUrl ? (
+            <video src={heroVideoUrl} controls playsInline preload="metadata" style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover" as const }} />
+          ) : (
+            <div style={{ padding: "26px 16px", textAlign: "center" as const, color: "rgba(255,255,255,0.75)", fontSize: 12.5 }}>No video uploaded yet — add one from the Admin page</div>
+          )}
         </div>
-        <div style={{ position: "absolute" as const, top: 22, right: 20, width: 34, height: 34, borderRadius: 999, background: "rgba(255,255,255,0.16)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>→</div>
       </div>
 
       <div ref={setRef("works")} className="fh-section" style={{ ...fade(), padding: "20px 20px 4px" }}>
@@ -332,9 +356,9 @@ export default function Home() {
             {featuredWorks.map(function (w) {
               return (
                 <div className="fh-hover-lift" style={{ background: "#fff", border: "1px solid #ECE8F5", borderRadius: 18, overflow: "hidden", boxShadow: "0 10px 24px rgba(107,60,180,0.08)" }} key={w.id}>
-                  <div style={{ height: 100, background: "linear-gradient(160deg,#FF7AB0,#9B5CFC)" }}></div>
+                  <div style={{ height: 100, background: "linear-gradient(160deg,#FF7AB0,#9B5CFC)", overflow: "hidden" as const }}>{renderThumbMedia(w)}</div>
                   <div style={{ padding: 10 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 3 }}>{w.title}</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 3, ...wordSafe, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{w.title}</div>
                     <div style={{ fontSize: 10.5, color: "#6E6B7A" }}>{creatorName(w.creator_id)}</div>
                   </div>
                 </div>
@@ -353,7 +377,7 @@ export default function Home() {
           <div ref={setRef(type)} className="fh-section" style={{ ...fade(), padding: "20px 20px 4px" }} key={type}>
             <div className="fh-hover-lift" style={catHeader} onClick={function () { toggleExpand(type); }}>
               <div style={{ ...catIcon, background: iconBg, color: "#fff" }}>{icon}</div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14.5, fontWeight: 700, textTransform: "capitalize" as const }}>{type}</div>
                 <div style={{ fontSize: 11.5, color: "#6E6B7A" }}>{subs.length} subcategor{subs.length === 1 ? "y" : "ies"}</div>
               </div>
@@ -390,9 +414,11 @@ export default function Home() {
           {team.map(function (m) {
             return (
               <div key={m.id} style={{ flex: "0 0 100px", textAlign: "center" as const }}>
-                <div style={{ width: 64, height: 64, borderRadius: 999, background: "linear-gradient(160deg,#9B5CFC,#5B1FA6)", margin: "0 auto 8px" }}></div>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>{m.name}</div>
-                <div style={{ fontSize: 10.5, color: "#6E6B7A" }}>{m.role}</div>
+                <div style={{ width: 64, height: 64, borderRadius: 999, background: "linear-gradient(160deg,#9B5CFC,#5B1FA6)", margin: "0 auto 8px", overflow: "hidden" as const }}>
+                  {m.avatar_url ? <img src={m.avatar_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" as const }} /> : null}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, ...wordSafe }}>{m.name}</div>
+                <div style={{ fontSize: 10.5, color: "#6E6B7A", ...wordSafe }}>{m.role}</div>
               </div>
             );
           })}
@@ -407,12 +433,12 @@ export default function Home() {
             {recommendedWorks.map(function (w) {
               return (
                 <div key={w.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 0", borderBottom: "1px solid #EEEBF4" }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "linear-gradient(150deg,#FFC15C,#B5730F)", flex: "0 0 auto" }}></div>
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "linear-gradient(150deg,#FFC15C,#B5730F)", flex: "0 0 auto", overflow: "hidden" as const }}>{renderThumbMedia(w)}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" as const }}>{w.title}</div>
-                    <div style={{ fontSize: 11, color: "#6E6B7A" }}>{creatorName(w.creator_id)} · {categoryName(w.category_id)}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, ...wordSafe, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{w.title}</div>
+                    <div style={{ fontSize: 11, color: "#6E6B7A", ...wordSafe }}>{creatorName(w.creator_id)} · {categoryName(w.category_id)}</div>
                   </div>
-                  <div style={{ color: "#7C3AED", fontWeight: 700, fontSize: 11.5 }}>★ {w.recommends || 0}</div>
+                  <div style={{ color: "#7C3AED", fontWeight: 700, fontSize: 11.5, flex: "0 0 auto" }}>★ {w.recommends || 0}</div>
                 </div>
               );
             })}
@@ -431,51 +457,11 @@ export default function Home() {
         </div>
       </div>
 
-      <div ref={setRef("about")} className="fh-section" style={{ ...fade(), padding: "20px 20px 4px" }}>
-        <h2 style={sectionTitle}>About Us</h2>
-        <div style={{ background: "#fff", border: "1px solid #ECE8F5", borderRadius: 20, padding: 20, boxShadow: "0 10px 24px rgba(107,60,180,0.08)" }}>
-          <p style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55, color: "#3C3750" }}>
-            Firalink Hub is the team&apos;s shared workspace for creative output — a single place to post, browse, and manage graphics, videos, and documents, right inside Telegram.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, marginBottom: 14 }}>
-            <div style={{ display: "flex", gap: 10 }}>
-              <span style={{ fontSize: 15 }}>🗂️</span>
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 700 }}>Organized by category</div>
-                <div style={{ fontSize: 12, color: "#6E6B7A" }}>Graphics, video, and documents each split into their own subcategories.</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <span style={{ fontSize: 15 }}>📤</span>
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 700 }}>Upload &amp; share work</div>
-                <div style={{ fontSize: 12, color: "#6E6B7A" }}>Post finished work with a title, description, and file for the team to see.</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <span style={{ fontSize: 15 }}>⭐</span>
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 700 }}>React &amp; recommend</div>
-                <div style={{ fontSize: 12, color: "#6E6B7A" }}>Like and recommend work so the best output rises to the top.</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <span style={{ fontSize: 15 }}>💡</span>
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 700 }}>Request new ideas</div>
-                <div style={{ fontSize: 12, color: "#6E6B7A" }}>Suggest a feature or a piece of work and the team gets notified.</div>
-              </div>
-            </div>
-          </div>
-          <div className="fh-hover-scale" style={{ fontSize: 12.5, fontWeight: 700, color: "#7C3AED", cursor: "pointer", display: "inline-block" }} onClick={function () { router.push("/about"); }}>Read the full guide</div>
-        </div>
-      </div>
-
       <div className="fh-section" style={{ ...fade(), margin: "24px 0 0", padding: "26px 20px 20px", background: "linear-gradient(160deg,#2A1450,#1A0E33)", color: "#fff" }}>
         <div style={{ fontFamily: "Space Grotesk, sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Firalink Hub</div>
         <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "9px 18px", marginBottom: 16 }}>
           <span className="fh-hover-scale" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", cursor: "pointer", display: "inline-block" }} onClick={goHome}>Home</span>
-          <span className="fh-hover-scale" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", cursor: "pointer", display: "inline-block" }} onClick={goToAboutSection}>About Us</span>
+          <span className="fh-hover-scale" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", cursor: "pointer", display: "inline-block" }} onClick={function () { router.push("/about"); }}>About Us</span>
           <span className="fh-hover-scale" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", cursor: "pointer", display: "inline-block" }} onClick={function () { setActiveNav("home"); setTimeout(function () { scrollToSection("services"); }, 60); }}>Services</span>
           <span className="fh-hover-scale" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", cursor: "pointer", display: "inline-block" }} onClick={goToTeamSection}>Team</span>
           <a href="/upload" className="fh-hover-scale" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", textDecoration: "none", display: "inline-block" }}>Post a Work</a>
@@ -513,10 +499,20 @@ export default function Home() {
               <p style={{ color: "#6E6B7A", fontSize: 13 }}>No ideas submitted yet.</p>
             ) : (
               ideas.map(function (idea) {
+                const status = idea.status || "pending";
+                const badgeStyle = status === "approved"
+                  ? { ...statusBadge, background: "#E4F7EA", color: "#1E8A4C" }
+                  : status === "declined"
+                  ? { ...statusBadge, background: "#FCEBEB", color: "#D64545" }
+                  : { ...statusBadge, background: "#F1E9FB", color: "#7C3AED" };
+                const statusLabel = status === "approved" ? "Approved" : status === "declined" ? "Declined" : "Pending";
                 return (
                   <div key={idea.id} style={{ borderBottom: "1px solid #EEEBF4", padding: "10px 0" }}>
-                    <strong style={{ fontSize: 13 }}>{idea.name}</strong>
-                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "#6E6B7A" }}>{idea.message}</p>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <strong style={{ fontSize: 13, ...wordSafe }}>{idea.name}</strong>
+                      <span style={badgeStyle}>{statusLabel}</span>
+                    </div>
+                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "#6E6B7A", ...wordSafe }}>{idea.message}</p>
                   </div>
                 );
               })
