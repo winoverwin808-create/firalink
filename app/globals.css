@@ -86,3 +86,13 @@ body {
     transition: none !important;
   }
 }
+
+/* Telegram viewport fix */
+html {
+  overflow: hidden;
+}
+body {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
