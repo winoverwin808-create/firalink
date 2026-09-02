@@ -426,12 +426,19 @@ export default function Admin() {
         {ideas.length === 0 ? (
           <p style={{ fontSize: 12.5, color: "#6E6B7A" }}>No ideas submitted yet.</p>
         ) : (
-          ideas.map((idea) => (
+          ideas.map((idea) => {
+            const assignedTo = idea.team_member_id ? team.find((m) => m.id === idea.team_member_id) : null;
+            return (
             <div key={idea.id} style={{ borderBottom: "1px solid #EEEBF4", padding: "10px 0" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 4 }}>
                 <strong style={{ fontSize: 13, ...wordSafe }}>{idea.name}</strong>
                 <span style={statusPill(idea.status)}>{idea.status === "approved" ? "Approved" : idea.status === "declined" ? "Declined" : "Pending"}</span>
               </div>
+              {assignedTo ? (
+                <div style={{ fontSize: 11, color: "#7C3AED", fontWeight: 700, margin: "0 0 4px" }}>
+                  For: {assignedTo.name}{assignedTo.role ? " — " + assignedTo.role : ""}
+                </div>
+              ) : null}
               <p style={{ margin: "0 0 8px", fontSize: 12.5, color: "#6E6B7A", ...wordSafe }}>{idea.message}</p>
               {idea.attachment_url ? <a href={idea.attachment_url} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, fontWeight: 700, color: "#7C3AED", display: "block", marginBottom: 8 }}>📎 View attachment</a> : null}
               <div style={{ display: "flex", gap: 8 }}>
@@ -440,7 +447,8 @@ export default function Admin() {
                 <button style={delBtn} onClick={() => deleteIdea(idea.id)}>×</button>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
