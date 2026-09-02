@@ -21,6 +21,7 @@ export default function Admin() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("");
   const [newAvatar, setNewAvatar] = useState<File | null>(null);
+  const [newChatId, setNewChatId] = useState("");
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoStatus, setVideoStatus] = useState("");
@@ -71,10 +72,12 @@ export default function Admin() {
       name: newName.trim(),
       role: newRole.trim() || "Team Member",
       avatar_url: avatarUrl,
+      telegram_chat_id: newChatId.trim() || null,
     });
     setNewName("");
     setNewRole("");
     setNewAvatar(null);
+    setNewChatId("");
     setMemberBusy(false);
     loadData();
   }
@@ -243,6 +246,9 @@ export default function Admin() {
               <div style={{ minWidth: 0 }}>
                 <strong style={{ fontSize: 13, ...wordSafe }}>{m.name}</strong>
                 <div style={{ color: "#6E6B7A", fontSize: 11, ...wordSafe }}>{m.role}</div>
+                <div style={{ fontSize: 10.5, ...wordSafe, color: m.telegram_chat_id ? "#1E8A4C" : "#B08900" }}>
+                  {m.telegram_chat_id ? "✅ Telegram connected" : "⚠️ No Telegram chat ID — won't get notified"}
+                </div>
               </div>
             </div>
             <button style={delBtn} onClick={() => deleteMember(m.id)}>×</button>
@@ -252,6 +258,13 @@ export default function Admin() {
           <input style={inputStyle} placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
           <input style={inputStyle} placeholder="Role" value={newRole} onChange={(e) => setNewRole(e.target.value)} />
         </div>
+        <label style={{ fontSize: 11.5, fontWeight: 700, color: "#6E6B7A", display: "block", margin: "10px 0 6px" }}>Telegram Chat ID (for request notifications)</label>
+        <input
+          style={{ ...inputStyle, width: "100%" }}
+          placeholder="e.g. 123456789"
+          value={newChatId}
+          onChange={(e) => setNewChatId(e.target.value)}
+        />
         <label style={{ fontSize: 11.5, fontWeight: 700, color: "#6E6B7A", display: "block", margin: "10px 0 6px" }}>Profile picture (optional)</label>
         <input
           type="file"

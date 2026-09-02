@@ -25,6 +25,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [ideaName, setIdeaName] = useState("");
   const [ideaMessage, setIdeaMessage] = useState("");
+  const [ideaTeamMemberId, setIdeaTeamMemberId] = useState("");
   const [ideaStatus, setIdeaStatus] = useState("");
   const [seenCount, setSeenCount] = useState(0);
 
@@ -159,20 +160,44 @@ export default function Home() {
       attachmentUrl = supabase.storage.from("uploads").getPublicUrl(path).data.publicUrl;
     }
 
+    const assignedMember = team.find(function (m) { return m.id === ideaTeamMemberId; });
+
     const insertResult = await supabase.from("ideas").insert({
       name: ideaName.trim() || "Anonymous",
       message: ideaMessage.trim(),
       status: "pending",
       attachment_url: attachmentUrl,
+      team_member_id: ideaTeamMemberId || null,
     });
     if (insertResult.error) {
       setIdeaStatus("Error: " + insertResult.error.message);
       return;
     }
-    setIdeaStatus("Thanks! Your idea has been submitted.");
+
+    if (assignedMember && assignedMember.telegram_chat_id) {
+      const notifyText =
+        "📩 <b>New request on Firalink Hub</b>\n\n" +
+        "From: " + (ideaName.trim() || "Anonymous") + "\n" +
+        "For: " + assignedMember.name + "\n\n" +
+        ideaMessage.trim();
+      fetch("/api/notify-team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatId: assignedMember.telegram_chat_id, message: notifyText }),
+      }).catch(function () {
+        // Non-fatal — the request itself was already saved successfully above.
+      });
+    }
+
+    setIdeaStatus(
+      assignedMember && !assignedMember.telegram_chat_id
+        ? "Thanks! Your idea has been submitted (note: " + assignedMember.name + " doesn't have Telegram notifications set up yet)."
+        : "Thanks! Your idea has been submitted."
+    );
     setIdeaName("");
     setIdeaMessage("");
     setIdeaFile(null);
+    setIdeaTeamMemberId("");
     loadAll();
     setTimeout(function () {
       setShowForm(false);
@@ -603,6 +628,13 @@ export default function Home() {
           <div className="fh-sheet" style={sheet} onClick={function (e) { e.stopPropagation(); }}>
             <h2 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 18, marginBottom: 14 }}>Submit Your Idea</h2>
             <input style={inputStyle} placeholder="Your name (optional)" value={ideaName} onChange={function (e) { setIdeaName(e.target.value); }} />
+            <label style={{ fontSize: 11.5, fontWeight: 700, color: "#6E6B7A", display: "block", margin: "0 0 6px" }}>Who is this request for?</label>
+            <select style={{ ...inputStyle, marginBottom: 10 }} value={ideaTeamMemberId} onChange={function (e) { setIdeaTeamMemberId(e.target.value); }}>
+              <option value="">No one specific</option>
+              {team.map(function (m) {
+                return <option key={m.id} value={m.id}>{m.name}{m.role ? " — " + m.role : ""}</option>;
+              })}
+            </select>
             <textarea style={{ ...inputStyle, minHeight: 90 }} placeholder="Describe your idea" value={ideaMessage} onChange={function (e) { setIdeaMessage(e.target.value); }} />
             <label style={{ fontSize: 11.5, fontWeight: 700, color: "#6E6B7A", display: "block", margin: "0 0 6px" }}>Attach a file (optional)</label>
             <input type="file" style={{ ...inputStyle, marginBottom: 6 }} onChange={function (e) { setIdeaFile(e.target.files ? e.target.files[0] : null); }} />
