@@ -22,6 +22,13 @@ export default function Admin() {
   const [newRole, setNewRole] = useState("");
   const [newAvatar, setNewAvatar] = useState<File | null>(null);
   const [newChatId, setNewChatId] = useState("");
+  const [memberError, setMemberError] = useState("");
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editMemberName, setEditMemberName] = useState("");
+  const [editMemberRole, setEditMemberRole] = useState("");
+  const [editMemberChatId, setEditMemberChatId] = useState("");
+  const [editMemberAvatar, setEditMemberAvatar] = useState<File | null>(null);
+  const [editMemberBusy, setEditMemberBusy] = useState(false);
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoStatus, setVideoStatus] = useState("");
@@ -83,7 +90,66 @@ export default function Admin() {
   }
 
   async function deleteMember(id: string) {
-    await supabase.from("team_members").delete().eq("id", id);
+    setMemberError("");
+    const result = await supabase.from("team_members").delete().eq("id", id);
+    if (result.error) {
+      // Most common cause: this member is still assigned to one or more
+      // ideas and the ideas.team_member_id foreign key has no ON DELETE
+      // rule set — run supabase_migration_3.sql once to fix that at the
+      // database level. Surfacing the real reason here either way.
+      setMemberError(result.error.message);
+      return;
+    }
+    loadData();
+  }
+
+  function startEditMember(m: any) {
+    setMemberError("");
+    setEditingMemberId(m.id);
+    setEditMemberName(m.name || "");
+    setEditMemberRole(m.role || "");
+    setEditMemberChatId(m.telegram_chat_id || "");
+    setEditMemberAvatar(null);
+  }
+
+  function cancelEditMember() {
+    setEditingMemberId(null);
+    setEditMemberAvatar(null);
+  }
+
+  async function saveEditMember(id: string) {
+    if (!editMemberName.trim()) return;
+    setMemberError("");
+    setEditMemberBusy(true);
+
+    let avatarUrl: string | undefined = undefined;
+    if (editMemberAvatar) {
+      const ext = editMemberAvatar.name.split(".").pop();
+      const path = "avatars/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "." + ext;
+      const uploadResult = await supabase.storage.from("uploads").upload(path, editMemberAvatar);
+      if (uploadResult.error) {
+        setMemberError("Upload error: " + uploadResult.error.message);
+        setEditMemberBusy(false);
+        return;
+      }
+      avatarUrl = supabase.storage.from("uploads").getPublicUrl(path).data.publicUrl;
+    }
+
+    const updatePayload: any = {
+      name: editMemberName.trim(),
+      role: editMemberRole.trim() || "Team Member",
+      telegram_chat_id: editMemberChatId.trim() || null,
+    };
+    if (avatarUrl !== undefined) updatePayload.avatar_url = avatarUrl;
+
+    const result = await supabase.from("team_members").update(updatePayload).eq("id", id);
+    setEditMemberBusy(false);
+    if (result.error) {
+      setMemberError(result.error.message);
+      return;
+    }
+    setEditingMemberId(null);
+    setEditMemberAvatar(null);
     loadData();
   }
 
@@ -237,21 +303,56 @@ export default function Admin() {
 
       <div style={panelStyle}>
         <h2 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 15, marginBottom: 10 }}>Team</h2>
+        {memberError ? <p style={{ fontSize: 12, color: "#D64545", marginBottom: 10 }}>{memberError}</p> : null}
         {team.map((m) => (
-          <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #EEEBF4" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 999, background: "linear-gradient(160deg,#9B5CFC,#5B1FA6)", flex: "0 0 auto", overflow: "hidden" as const }}>
-                {m.avatar_url ? <img src={m.avatar_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" as const }} /> : null}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <strong style={{ fontSize: 13, ...wordSafe }}>{m.name}</strong>
-                <div style={{ color: "#6E6B7A", fontSize: 11, ...wordSafe }}>{m.role}</div>
-                <div style={{ fontSize: 10.5, ...wordSafe, color: m.telegram_chat_id ? "#1E8A4C" : "#B08900" }}>
-                  {m.telegram_chat_id ? "✅ Telegram connected" : "⚠️ No Telegram chat ID — won't get notified"}
+          <div key={m.id} style={{ padding: "8px 0", borderBottom: "1px solid #EEEBF4" }}>
+            {editingMemberId === m.id ? (
+              <div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" as const }}>
+                  <input style={inputStyle} placeholder="Name" value={editMemberName} onChange={(e) => setEditMemberName(e.target.value)} />
+                  <input style={inputStyle} placeholder="Role" value={editMemberRole} onChange={(e) => setEditMemberRole(e.target.value)} />
+                </div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#6E6B7A", display: "block", margin: "0 0 6px" }}>Telegram Chat ID</label>
+                <input
+                  style={{ ...inputStyle, width: "100%", marginBottom: 8 }}
+                  placeholder="e.g. 123456789"
+                  value={editMemberChatId}
+                  onChange={(e) => setEditMemberChatId(e.target.value)}
+                />
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#6E6B7A", display: "block", margin: "0 0 6px" }}>Replace profile picture (optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ ...inputStyle, width: "100%", marginBottom: 8 }}
+                  onChange={(e) => setEditMemberAvatar(e.target.files ? e.target.files[0] : null)}
+                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button style={{ ...addBtnStyle, background: "#E4F7EA", color: "#1E8A4C" }} onClick={() => saveEditMember(m.id)} disabled={editMemberBusy}>
+                    {editMemberBusy ? "Saving..." : "Save"}
+                  </button>
+                  <button style={{ ...addBtnStyle, background: "#F5F3F9", color: "#6E6B7A" }} onClick={cancelEditMember} disabled={editMemberBusy}>Cancel</button>
                 </div>
               </div>
-            </div>
-            <button style={delBtn} onClick={() => deleteMember(m.id)}>×</button>
+            ) : (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 999, background: "linear-gradient(160deg,#9B5CFC,#5B1FA6)", flex: "0 0 auto", overflow: "hidden" as const }}>
+                    {m.avatar_url ? <img src={m.avatar_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" as const }} /> : null}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <strong style={{ fontSize: 13, ...wordSafe }}>{m.name}</strong>
+                    <div style={{ color: "#6E6B7A", fontSize: 11, ...wordSafe }}>{m.role}</div>
+                    <div style={{ fontSize: 10.5, ...wordSafe, color: m.telegram_chat_id ? "#1E8A4C" : "#B08900" }}>
+                      {m.telegram_chat_id ? "✅ Telegram connected" : "⚠️ No Telegram chat ID — won't get notified"}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6, flex: "0 0 auto" }}>
+                  <button style={{ ...delBtn, width: "auto", padding: "0 10px", background: "#F5F3F9", color: "#7C3AED" }} onClick={() => startEditMember(m)}>Edit</button>
+                  <button style={delBtn} onClick={() => deleteMember(m.id)}>×</button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" as const }}>
