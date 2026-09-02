@@ -9,7 +9,12 @@ export default function Admin() {
   const [categories, setCategories] = useState<any[]>([]);
   const [team, setTeam] = useState<any[]>([]);
   const [ideas, setIdeas] = useState<any[]>([]);
+  const [works, setWorks] = useState<any[]>([]);
   const [heroVideoUrl, setHeroVideoUrl] = useState<string | null>(null);
+  const [editingWorkId, setEditingWorkId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [workError, setWorkError] = useState("");
+  const [ideaError, setIdeaError] = useState("");
 
   const [newCatType, setNewCatType] = useState("");
   const [newCatName, setNewCatName] = useState("");
@@ -26,10 +31,12 @@ export default function Admin() {
     const { data: cats } = await supabase.from("categories").select("*").order("type");
     const { data: members } = await supabase.from("team_members").select("*");
     const { data: ideasData } = await supabase.from("ideas").select("*").order("created_at", { ascending: false });
+    const { data: worksData } = await supabase.from("works").select("*").order("created_at", { ascending: false });
     const { data: hero } = await supabase.from("hero_video").select("*").eq("id", 1).maybeSingle();
     if (cats) setCategories(cats);
     if (members) setTeam(members);
     if (ideasData) setIdeas(ideasData);
+    if (worksData) setWorks(worksData);
     setHeroVideoUrl(hero && hero.video_url ? hero.video_url : null);
   }
 
@@ -112,7 +119,41 @@ export default function Admin() {
   }
 
   async function setIdeaStatus(id: string, status: string) {
-    await supabase.from("ideas").update({ status: status }).eq("id", id);
+    setIdeaError("");
+    const result = await supabase.from("ideas").update({ status: status }).eq("id", id);
+    if (result.error) {
+      // Most common cause: the "ideas" table has no UPDATE policy for the
+      // anon role in Supabase Row Level Security, so the button appears to
+      // do nothing. Surface the real reason here instead of failing silently.
+      setIdeaError(result.error.message);
+      return;
+    }
+    loadData();
+  }
+
+  async function deleteWork(id: string) {
+    setWorkError("");
+    const result = await supabase.from("works").delete().eq("id", id);
+    if (result.error) {
+      setWorkError(result.error.message);
+      return;
+    }
+    loadData();
+  }
+
+  function startEditWork(w: any) {
+    setEditingWorkId(w.id);
+    setEditTitle(w.title || "");
+  }
+
+  async function saveEditWork(id: string) {
+    setWorkError("");
+    const result = await supabase.from("works").update({ title: editTitle.trim() }).eq("id", id);
+    if (result.error) {
+      setWorkError(result.error.message);
+      return;
+    }
+    setEditingWorkId(null);
     loadData();
   }
 
@@ -145,7 +186,7 @@ export default function Admin() {
       </div>
 
       <div style={panelStyle}>
-        <h2 style={{ fontSize: 15, marginBottom: 10 }}>Hero Video</h2>
+        <h2 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 15, marginBottom: 10 }}>Hero Video</h2>
         <p style={{ fontSize: 12, color: "#6E6B7A", marginBottom: 12 }}>Shown in the &quot;Live AI Studio&quot; section on the homepage. Keep it to about a minute.</p>
         {heroVideoUrl ? (
           <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 12, background: "#F5F3F9" }}>
@@ -171,7 +212,7 @@ export default function Admin() {
 
       {["graphics", "video", "documents"].map((type) => (
         <div style={panelStyle} key={type}>
-          <h2 style={{ textTransform: "capitalize" as const, fontSize: 15, marginBottom: 10 }}>{type}</h2>
+          <h2 style={{ fontFamily: "Space Grotesk, sans-serif", textTransform: "capitalize" as const, fontSize: 15, marginBottom: 10 }}>{type}</h2>
           <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 9, marginBottom: 14 }}>
             {grouped[type].map((cat) => (
               <div style={chipStyle} key={cat.id}>
@@ -192,7 +233,7 @@ export default function Admin() {
       ))}
 
       <div style={panelStyle}>
-        <h2 style={{ fontSize: 15, marginBottom: 10 }}>Team</h2>
+        <h2 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 15, marginBottom: 10 }}>Team</h2>
         {team.map((m) => (
           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #EEEBF4" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
@@ -222,8 +263,42 @@ export default function Admin() {
       </div>
 
       <div style={panelStyle}>
-        <h2 style={{ fontSize: 15, marginBottom: 4 }}>Startup Ideas</h2>
+        <h2 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 15, marginBottom: 4 }}>Uploaded Works</h2>
+        <p style={{ fontSize: 12, color: "#6E6B7A", marginBottom: 12 }}>Everything posted from the Upload page. Edit the title or remove a file.</p>
+        {workError ? <p style={{ fontSize: 12, color: "#D64545", marginBottom: 10 }}>{workError}</p> : null}
+        {works.length === 0 ? (
+          <p style={{ fontSize: 12.5, color: "#6E6B7A" }}>No works uploaded yet.</p>
+        ) : (
+          works.map((w) => (
+            <div key={w.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #EEEBF4" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(150deg,#9B5CFC,#5B1FA6)", flex: "0 0 auto", overflow: "hidden" as const, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 16 }}>
+                {w.file_type && ["jpg", "jpeg", "png", "gif", "webp", "svg", "avif"].indexOf(w.file_type.toLowerCase()) !== -1 ? (
+                  <img src={w.file_url} alt={w.title} style={{ width: "100%", height: "100%", objectFit: "cover" as const }} />
+                ) : w.file_type && ["mp4", "mov", "webm", "m4v"].indexOf(w.file_type.toLowerCase()) !== -1 ? "🎬" : "📄"}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {editingWorkId === w.id ? (
+                  <input style={{ ...inputStyle, width: "100%" }} value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                ) : (
+                  <strong style={{ fontSize: 12.5, ...wordSafe, display: "block" }}>{w.title}</strong>
+                )}
+                <div style={{ color: "#6E6B7A", fontSize: 10.5 }}>{(w.file_type || "").toUpperCase()}</div>
+              </div>
+              {editingWorkId === w.id ? (
+                <button style={{ ...delBtn, width: "auto", padding: "0 10px", background: "#E4F7EA", color: "#1E8A4C" }} onClick={() => saveEditWork(w.id)}>Save</button>
+              ) : (
+                <button style={{ ...delBtn, width: "auto", padding: "0 10px", background: "#F5F3F9", color: "#7C3AED" }} onClick={() => startEditWork(w)}>Edit</button>
+              )}
+              <button style={delBtn} onClick={() => deleteWork(w.id)}>×</button>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div style={panelStyle}>
+        <h2 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 15, marginBottom: 4 }}>Startup Ideas</h2>
         <p style={{ fontSize: 12, color: "#6E6B7A", marginBottom: 12 }}>Approve or decline requests submitted from &quot;Have an idea? Let&apos;s create it together.&quot; The result shows up in the homepage notifications.</p>
+        {ideaError ? <p style={{ fontSize: 12, color: "#D64545", marginBottom: 10 }}>{ideaError}</p> : null}
         {ideas.length === 0 ? (
           <p style={{ fontSize: 12.5, color: "#6E6B7A" }}>No ideas submitted yet.</p>
         ) : (
@@ -234,6 +309,7 @@ export default function Admin() {
                 <span style={statusPill(idea.status)}>{idea.status === "approved" ? "Approved" : idea.status === "declined" ? "Declined" : "Pending"}</span>
               </div>
               <p style={{ margin: "0 0 8px", fontSize: 12.5, color: "#6E6B7A", ...wordSafe }}>{idea.message}</p>
+              {idea.attachment_url ? <a href={idea.attachment_url} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, fontWeight: 700, color: "#7C3AED", display: "block", marginBottom: 8 }}>📎 View attachment</a> : null}
               <div style={{ display: "flex", gap: 8 }}>
                 <button style={approveBtn} onClick={() => setIdeaStatus(idea.id, "approved")}>Approve</button>
                 <button style={declineBtn} onClick={() => setIdeaStatus(idea.id, "declined")}>Decline</button>

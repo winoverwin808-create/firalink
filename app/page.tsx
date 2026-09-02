@@ -35,6 +35,18 @@ export default function Home() {
   const [activeNav, setActiveNav] = useState("home");
   const [highlightWorkId, setHighlightWorkId] = useState<string | null>(null);
 
+  const [heroMuted, setHeroMuted] = useState(true);
+  const [heroErrored, setHeroErrored] = useState(false);
+
+  const [lightboxWork, setLightboxWork] = useState<any | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentName, setCommentName] = useState("");
+  const [commentText, setCommentText] = useState("");
+  const [commentStatus, setCommentStatus] = useState("");
+  const [shareStatus, setShareStatus] = useState("");
+
+  const [ideaFile, setIdeaFile] = useState<File | null>(null);
+
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   function setRef(key: string) {
     return function (el: HTMLDivElement | null) {
@@ -64,6 +76,10 @@ export default function Home() {
     const stored = window.localStorage.getItem("seenIdeaCount");
     setSeenCount(stored ? parseInt(stored) : 0);
   }, []);
+
+  useEffect(function () {
+    setHeroErrored(false);
+  }, [heroVideoUrl]);
 
   useEffect(function () {
     if (!searchOpen) return;
@@ -115,10 +131,24 @@ export default function Home() {
       return;
     }
     setIdeaStatus("Submitting...");
+
+    let attachmentUrl: string | null = null;
+    if (ideaFile) {
+      const ext = ideaFile.name.split(".").pop();
+      const path = "ideas/" + Date.now() + "_" + Math.random().toString(36).slice(2) + "." + ext;
+      const uploadResult = await supabase.storage.from("uploads").upload(path, ideaFile);
+      if (uploadResult.error) {
+        setIdeaStatus("Upload error: " + uploadResult.error.message);
+        return;
+      }
+      attachmentUrl = supabase.storage.from("uploads").getPublicUrl(path).data.publicUrl;
+    }
+
     const insertResult = await supabase.from("ideas").insert({
       name: ideaName.trim() || "Anonymous",
       message: ideaMessage.trim(),
       status: "pending",
+      attachment_url: attachmentUrl,
     });
     if (insertResult.error) {
       setIdeaStatus("Error: " + insertResult.error.message);
@@ -127,6 +157,7 @@ export default function Home() {
     setIdeaStatus("Thanks! Your idea has been submitted.");
     setIdeaName("");
     setIdeaMessage("");
+    setIdeaFile(null);
     loadAll();
     setTimeout(function () {
       setShowForm(false);
@@ -142,6 +173,62 @@ export default function Home() {
   async function recommendWork(id: string, current: number) {
     await supabase.from("works").update({ recommends: (current || 0) + 1 }).eq("id", id);
     loadAll();
+  }
+
+  async function loadComments(workId: string) {
+    const result = await supabase.from("comments").select("*").eq("work_id", workId).order("created_at", { ascending: false });
+    setComments(result.data || []);
+  }
+
+  function openLightbox(w: any) {
+    setLightboxWork(w);
+    setCommentName("");
+    setCommentText("");
+    setCommentStatus("");
+    setShareStatus("");
+    loadComments(w.id);
+  }
+
+  function closeLightbox() {
+    setLightboxWork(null);
+    setComments([]);
+  }
+
+  async function submitComment() {
+    if (!lightboxWork || !commentText.trim()) {
+      setCommentStatus("Write a comment first.");
+      return;
+    }
+    setCommentStatus("Posting...");
+    const insertResult = await supabase.from("comments").insert({
+      work_id: lightboxWork.id,
+      name: commentName.trim() || "Anonymous",
+      message: commentText.trim(),
+    });
+    if (insertResult.error) {
+      setCommentStatus("Error: " + insertResult.error.message);
+      return;
+    }
+    setCommentText("");
+    setCommentStatus("");
+    loadComments(lightboxWork.id);
+  }
+
+  async function shareWork(w: any) {
+    const shareData = { title: w.title, text: w.title + " on Firalink Hub", url: w.file_url };
+    try {
+      if (typeof navigator !== "undefined" && (navigator as any).share) {
+        await (navigator as any).share(shareData);
+      } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(w.file_url);
+        setShareStatus("Link copied!");
+        setTimeout(function () { setShareStatus(""); }, 1800);
+      }
+      await supabase.from("works").update({ shares: (w.shares || 0) + 1 }).eq("id", w.id);
+      loadAll();
+    } catch (e) {
+      // user cancelled the share sheet — nothing to do
+    }
   }
 
   function openSearch() {
@@ -252,20 +339,22 @@ export default function Home() {
   const wordSafe = { wordBreak: "break-word" as const, overflowWrap: "anywhere" as const };
   const statusBadge = { fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999, display: "inline-block" };
 
-  function renderThumbMedia(w: any) {
+  function renderThumbMedia(w: any, onBroken?: () => void) {
     if (isImageType(w.file_type)) {
-      return <img src={w.file_url} alt={w.title} style={{ width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }} />;
+      return <img src={w.file_url} alt={w.title} style={{ width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }} onError={onBroken} />;
     }
     if (isVideoType(w.file_type)) {
-      return <video src={w.file_url} muted preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }} />;
+      return <video src={w.file_url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }} onError={onBroken} />;
     }
-    return null;
+    return (
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, color: "rgba(255,255,255,0.85)" }}>📄</div>
+    );
   }
 
   function renderWorkCard(w: any) {
     const isHighlighted = highlightWorkId === w.id;
     return (
-      <div className="fh-hover-lift" style={{ ...workCard, boxShadow: isHighlighted ? "0 0 0 3px #8B2FD9" : workCard.boxShadow }} key={w.id}>
+      <div className="fh-hover-lift" style={{ ...workCard, boxShadow: isHighlighted ? "0 0 0 3px #8B2FD9" : workCard.boxShadow, cursor: "pointer" }} key={w.id} onClick={function () { openLightbox(w); }}>
         <div style={thumb}>
           {renderThumbMedia(w)}
           <div style={{ position: "absolute" as const, top: 10, left: 10, background: "rgba(255,255,255,0.92)", padding: "4px 9px", borderRadius: 8, fontSize: 10, fontWeight: 700, color: "#5B1FA6" }}>{(w.file_type || "").toUpperCase()}</div>
@@ -274,9 +363,9 @@ export default function Home() {
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, ...wordSafe, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{w.title}</div>
           <div style={{ fontSize: 11, color: "#6E6B7A", marginBottom: 10, ...wordSafe }}>{creatorName(w.creator_id)} · {categoryName(w.category_id)}</div>
           <div style={{ borderTop: "1px solid #EEEBF4", paddingTop: 8, display: "flex", flexWrap: "wrap" as const }}>
-            <span style={tinyBtn} onClick={function () { likeWork(w.id, w.likes); }}>❤️ {w.likes || 0}</span>
-            <span style={tinyBtn} onClick={function () { recommendWork(w.id, w.recommends); }}>⭐ {w.recommends || 0}</span>
-            {w.file_url ? <a href={w.file_url} target="_blank" rel="noreferrer" style={tinyBtn}>⬇️ Download</a> : null}
+            <span style={tinyBtn} onClick={function (e) { e.stopPropagation(); likeWork(w.id, w.likes); }}>❤️ {w.likes || 0}</span>
+            <span style={tinyBtn} onClick={function (e) { e.stopPropagation(); recommendWork(w.id, w.recommends); }}>⭐ {w.recommends || 0}</span>
+            {w.file_url ? <a href={w.file_url} target="_blank" rel="noreferrer" style={tinyBtn} onClick={function (e) { e.stopPropagation(); }}>⬇️ Download</a> : null}
           </div>
         </div>
       </div>
@@ -313,17 +402,38 @@ export default function Home() {
       </div>
 
       <div className="fh-section" style={{ ...fade(), padding: "16px 20px 4px" }}>
-        <h1 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 23, margin: "0 0 3px", fontWeight: 600 }}>Good morning, team 👋</h1>
-        <p style={{ margin: 0, color: "#6E6B7A", fontSize: 13.5 }}>{categories.length} categories loaded from Supabase</p>
+        <h1 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 22, margin: "0 0 3px", fontWeight: 700, letterSpacing: "-0.01em", color: "#1A1523" }}>Good morning, team</h1>
+        <p style={{ margin: 0, color: "#6E6B7A", fontSize: 13, fontWeight: 500 }}>{categories.length} categories synced</p>
       </div>
 
       <div className="fh-section" style={{ ...fade(), margin: "18px 20px 0", borderRadius: 22, padding: 20, background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", boxShadow: "0 14px 30px rgba(91,31,166,0.28)" }}>
         <span style={{ fontSize: 11, letterSpacing: "0.09em", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase" as const, display: "block", marginBottom: 6 }}>Live AI Studio</span>
         <div style={{ fontFamily: "Space Grotesk, sans-serif", color: "#fff", fontSize: 20, marginBottom: 8, fontWeight: 600 }}>Talk to Firalink AI</div>
         <p style={{ margin: "0 0 14px", color: "rgba(255,255,255,0.82)", fontSize: 13, lineHeight: 1.5, maxWidth: 260 }}>A quick intro to what the hub can do</p>
-        <div style={{ borderRadius: 16, overflow: "hidden", background: "rgba(255,255,255,0.12)" }}>
-          {heroVideoUrl ? (
-            <video src={heroVideoUrl} controls playsInline preload="metadata" style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover" as const }} />
+        <div style={{ borderRadius: 16, overflow: "hidden", background: "rgba(255,255,255,0.12)", position: "relative" as const }}>
+          {heroVideoUrl && !heroErrored ? (
+            <>
+              <video
+                key={heroVideoUrl}
+                src={heroVideoUrl}
+                autoPlay
+                loop
+                muted={heroMuted}
+                playsInline
+                preload="auto"
+                style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover" as const }}
+                onError={function () { setHeroErrored(true); }}
+              />
+              <div
+                className="fh-hover-scale"
+                style={{ position: "absolute" as const, bottom: 10, right: 10, width: 34, height: 34, borderRadius: 999, background: "rgba(0,0,0,0.45)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, cursor: "pointer" }}
+                onClick={function () { setHeroMuted(function (m) { return !m; }); }}
+              >
+                {heroMuted ? "🔇" : "🔊"}
+              </div>
+            </>
+          ) : heroVideoUrl && heroErrored ? (
+            <div style={{ padding: "26px 16px", textAlign: "center" as const, color: "rgba(255,255,255,0.85)", fontSize: 12.5 }}>This video couldn&apos;t load. Try re-uploading it as an .mp4 from the Admin page.</div>
           ) : (
             <div style={{ padding: "26px 16px", textAlign: "center" as const, color: "rgba(255,255,255,0.75)", fontSize: 12.5 }}>No video uploaded yet — add one from the Admin page</div>
           )}
@@ -355,7 +465,7 @@ export default function Home() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {featuredWorks.map(function (w) {
               return (
-                <div className="fh-hover-lift" style={{ background: "#fff", border: "1px solid #ECE8F5", borderRadius: 18, overflow: "hidden", boxShadow: "0 10px 24px rgba(107,60,180,0.08)" }} key={w.id}>
+                <div className="fh-hover-lift" style={{ background: "#fff", border: "1px solid #ECE8F5", borderRadius: 18, overflow: "hidden", boxShadow: "0 10px 24px rgba(107,60,180,0.08)", cursor: "pointer" }} key={w.id} onClick={function () { openLightbox(w); }}>
                   <div style={{ height: 100, background: "linear-gradient(160deg,#FF7AB0,#9B5CFC)", overflow: "hidden" as const }}>{renderThumbMedia(w)}</div>
                   <div style={{ padding: 10 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 3, ...wordSafe, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{w.title}</div>
@@ -432,7 +542,7 @@ export default function Home() {
           <div style={{ background: "#fff", border: "1px solid #ECE8F5", borderRadius: 22, padding: "6px 16px", boxShadow: "0 10px 24px rgba(107,60,180,0.08)" }}>
             {recommendedWorks.map(function (w) {
               return (
-                <div key={w.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 0", borderBottom: "1px solid #EEEBF4" }}>
+                <div key={w.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 0", borderBottom: "1px solid #EEEBF4", cursor: "pointer" }} onClick={function () { openLightbox(w); }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: "linear-gradient(150deg,#FFC15C,#B5730F)", flex: "0 0 auto", overflow: "hidden" as const }}>{renderThumbMedia(w)}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, ...wordSafe, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{w.title}</div>
@@ -484,7 +594,10 @@ export default function Home() {
             <h2 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 18, marginBottom: 14 }}>Submit Your Idea</h2>
             <input style={inputStyle} placeholder="Your name (optional)" value={ideaName} onChange={function (e) { setIdeaName(e.target.value); }} />
             <textarea style={{ ...inputStyle, minHeight: 90 }} placeholder="Describe your idea" value={ideaMessage} onChange={function (e) { setIdeaMessage(e.target.value); }} />
-            <button className="fh-hover-scale" style={btn} onClick={submitIdea}>Submit Idea</button>
+            <label style={{ fontSize: 11.5, fontWeight: 700, color: "#6E6B7A", display: "block", margin: "0 0 6px" }}>Attach a file (optional)</label>
+            <input type="file" style={{ ...inputStyle, marginBottom: 6 }} onChange={function (e) { setIdeaFile(e.target.files ? e.target.files[0] : null); }} />
+            {ideaFile ? <p style={{ fontSize: 11.5, color: "#6E6B7A", margin: "0 0 10px" }}>Selected: {ideaFile.name}</p> : null}
+            <button className="fh-hover-scale" style={{ ...btn, marginTop: 6 }} onClick={submitIdea}>Submit Idea</button>
             {ideaStatus ? <p style={{ marginTop: 10, fontSize: 13, color: ideaStatus.indexOf("Error") === 0 ? "#D64545" : "#5B1FA6" }}>{ideaStatus}</p> : null}
           </div>
         </div>
@@ -607,6 +720,58 @@ export default function Home() {
                 ) : null}
               </>
             )}
+          </div>
+        </div>
+      ) : null}
+
+      {lightboxWork ? (
+        <div style={{ position: "fixed" as const, inset: 0, background: "#000", zIndex: 80, maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" as const }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 10px" }}>
+            <div className="fh-hover-scale" style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.14)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }} onClick={closeLightbox}>×</div>
+            <div style={{ color: "#fff", fontSize: 13, fontWeight: 700, ...wordSafe, flex: 1, margin: "0 12px", textAlign: "center" as const, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{lightboxWork.title}</div>
+            {lightboxWork.file_url ? <a href={lightboxWork.file_url} target="_blank" rel="noreferrer" style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.14)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", fontSize: 15 }}>⬇️</a> : null}
+          </div>
+
+          <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", background: "#000", minHeight: 220 }}>
+            {isImageType(lightboxWork.file_type) ? (
+              <img src={lightboxWork.file_url} alt={lightboxWork.title} style={{ width: "100%", maxHeight: "50vh", objectFit: "contain" as const, display: "block" }} />
+            ) : isVideoType(lightboxWork.file_type) ? (
+              <video src={lightboxWork.file_url} controls autoPlay playsInline style={{ width: "100%", maxHeight: "50vh", display: "block" }} />
+            ) : (
+              <div style={{ padding: "40px 20px", textAlign: "center" as const }}>
+                <div style={{ fontSize: 44, marginBottom: 10 }}>📄</div>
+                {lightboxWork.file_url ? <a href={lightboxWork.file_url} target="_blank" rel="noreferrer" style={{ color: "#C9A8FF", fontSize: 13, fontWeight: 700 }}>Open document</a> : null}
+              </div>
+            )}
+          </div>
+
+          <div style={{ flex: 1, background: "#F5F3F9", borderRadius: "20px 20px 0 0", padding: "16px 20px 24px", overflowY: "auto" as const }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { recommendWork(lightboxWork.id, lightboxWork.recommends); setLightboxWork(function (w: any) { return w ? { ...w, recommends: (w.recommends || 0) + 1 } : w; }); }}>⭐ Recommend</div>
+              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { shareWork(lightboxWork); }}>📤 Share</div>
+              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { likeWork(lightboxWork.id, lightboxWork.likes); setLightboxWork(function (w: any) { return w ? { ...w, likes: (w.likes || 0) + 1 } : w; }); }}>❤️ Like</div>
+            </div>
+            {shareStatus ? <p style={{ fontSize: 12, color: "#7C3AED", margin: "-8px 0 12px" }}>{shareStatus}</p> : null}
+
+            <h3 style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 14, margin: "0 0 10px" }}>Comments</h3>
+            <div style={{ marginBottom: 12 }}>
+              {comments.length === 0 ? (
+                <p style={{ fontSize: 12.5, color: "#6E6B7A" }}>No comments yet — be the first.</p>
+              ) : (
+                comments.map(function (c) {
+                  return (
+                    <div key={c.id} style={{ borderBottom: "1px solid #EEEBF4", padding: "8px 0" }}>
+                      <strong style={{ fontSize: 12.5 }}>{c.name}</strong>
+                      <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#3C3750", ...wordSafe }}>{c.message}</p>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <input style={inputStyle} placeholder="Your name (optional)" value={commentName} onChange={function (e) { setCommentName(e.target.value); }} />
+            <textarea style={{ ...inputStyle, minHeight: 60 }} placeholder="Add a comment" value={commentText} onChange={function (e) { setCommentText(e.target.value); }} />
+            <button className="fh-hover-scale" style={btn} onClick={submitComment}>Post Comment</button>
+            {commentStatus ? <p style={{ marginTop: 8, fontSize: 12, color: commentStatus.indexOf("Error") === 0 ? "#D64545" : "#6E6B7A" }}>{commentStatus}</p> : null}
           </div>
         </div>
       ) : null}
