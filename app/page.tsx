@@ -37,9 +37,6 @@ export default function Home() {
 
   const [heroMuted, setHeroMuted] = useState(true);
   const [heroErrored, setHeroErrored] = useState(false);
-  const [heroPlaying, setHeroPlaying] = useState(false);
-  const [heroStarted, setHeroStarted] = useState(false);
-  const [heroVolume, setHeroVolume] = useState(1);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const [lightboxWork, setLightboxWork] = useState<any | null>(null);
@@ -83,59 +80,19 @@ export default function Home() {
 
   useEffect(function () {
     setHeroErrored(false);
-    setHeroPlaying(false);
-    setHeroStarted(false);
-    setHeroVolume(1);
   }, [heroVideoUrl]);
-
-  function attemptHeroPlay(withSound: boolean) {
-    const el = heroVideoRef.current;
-    if (!el) return;
-    if (withSound) {
-      el.muted = false;
-      el.volume = heroVolume;
-      setHeroMuted(false);
-    }
-    const playResult = el.play();
-    if (playResult && typeof playResult.then === "function") {
-      playResult.then(function () { setHeroPlaying(true); setHeroStarted(true); }).catch(function () { setHeroPlaying(false); });
-    }
-  }
-
-  function toggleHeroPlayPause() {
-    const el = heroVideoRef.current;
-    if (!el) return;
-    if (el.paused) {
-      attemptHeroPlay(true);
-    } else {
-      el.pause();
-      setHeroPlaying(false);
-    }
-  }
-
-  function changeHeroVolume(delta: number) {
-    const el = heroVideoRef.current;
-    if (!el) return;
-    const next = Math.max(0, Math.min(1, Math.round((heroVolume + delta) * 10) / 10));
-    setHeroVolume(next);
-    el.volume = next;
-    const shouldMute = next === 0;
-    el.muted = shouldMute;
-    setHeroMuted(shouldMute);
-    if (next > 0 && el.paused) {
-      attemptHeroPlay(false);
-      el.muted = false;
-      el.volume = next;
-      setHeroMuted(false);
-    }
-  }
 
   useEffect(function () {
     if (!heroVideoUrl) return;
-    // Try silently first — this is the only kind of autoplay browsers/Telegram
-    // ever allow without a tap. If it's blocked, heroPlaying stays false and
-    // the "tap to play" button below takes over.
-    const t = setTimeout(function () { attemptHeroPlay(false); }, 150);
+    // Some WebViews (Telegram included) load the video but never actually
+    // start the autoplay attribute on their own — give it a nudge.
+    const t = setTimeout(function () {
+      const el = heroVideoRef.current;
+      if (el && el.paused) {
+        const playResult = el.play();
+        if (playResult && typeof playResult.catch === "function") playResult.catch(function () {});
+      }
+    }, 150);
     return function () { clearTimeout(t); };
   }, [heroVideoUrl]);
 
@@ -468,62 +425,23 @@ export default function Home() {
         <span style={{ fontSize: 11, letterSpacing: "0.09em", fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase" as const, display: "block", marginBottom: 6 }}>Live AI Studio</span>
         <div style={{ fontFamily: "Space Grotesk, sans-serif", color: "#fff", fontSize: 20, marginBottom: 8, fontWeight: 600 }}>Talk to Firalink AI</div>
         <p style={{ margin: "0 0 14px", color: "rgba(255,255,255,0.82)", fontSize: 13, lineHeight: 1.5, maxWidth: 260 }}>A quick intro to what the hub can do</p>
-        <div style={{ borderRadius: 16, overflow: "hidden", background: "rgba(255,255,255,0.12)", position: "relative" as const }}>
+        <div style={{ borderRadius: 16, overflow: "hidden", background: "#000", position: "relative" as const }}>
           {heroVideoUrl && !heroErrored ? (
-            <>
-              <video
-                key={heroVideoUrl}
-                ref={heroVideoRef}
-                src={heroVideoUrl}
-                autoPlay
-                loop
-                muted={heroMuted}
-                playsInline
-                webkit-playsinline="true"
-                preload="auto"
-                style={{ width: "100%", display: "block", maxHeight: 220, minHeight: 160, objectFit: "cover" as const, background: "#00000022" }}
-                onError={function () { setHeroErrored(true); }}
-                onPlaying={function () { setHeroPlaying(true); setHeroStarted(true); }}
-                onPause={function () { setHeroPlaying(false); }}
-              />
-              {!heroStarted ? (
-                <div
-                  className="fh-hover-scale"
-                  style={{ position: "absolute" as const, inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(20,8,46,0.35)", cursor: "pointer" }}
-                  onClick={function () { attemptHeroPlay(true); }}
-                >
-                  <div style={{ width: 62, height: 62, borderRadius: 999, background: "rgba(255,255,255,0.95)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: "#5B1FA6", boxShadow: "0 8px 20px rgba(0,0,0,0.25)" }}>▶</div>
-                </div>
-              ) : (
-                <div style={{ position: "absolute" as const, bottom: 10, left: 10, right: 10, display: "flex", alignItems: "center", gap: 8, background: "rgba(20,8,46,0.55)", backdropFilter: "blur(6px)", borderRadius: 999, padding: "6px 10px" }}>
-                  <div
-                    className="fh-hover-scale"
-                    style={{ width: 28, height: 28, borderRadius: 999, background: "rgba(255,255,255,0.16)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, cursor: "pointer", flex: "0 0 auto" }}
-                    onClick={toggleHeroPlayPause}
-                  >
-                    {heroPlaying ? "⏸" : "▶"}
-                  </div>
-                  <div
-                    className="fh-hover-scale"
-                    style={{ width: 26, height: 26, borderRadius: 999, background: "rgba(255,255,255,0.16)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, cursor: "pointer", flex: "0 0 auto" }}
-                    onClick={function () { changeHeroVolume(-0.2); }}
-                  >
-                    −
-                  </div>
-                  <div style={{ flex: 1, height: 4, borderRadius: 999, background: "rgba(255,255,255,0.25)", overflow: "hidden" as const }}>
-                    <div style={{ width: (heroMuted ? 0 : heroVolume * 100) + "%", height: "100%", background: "#fff" }}></div>
-                  </div>
-                  <div
-                    className="fh-hover-scale"
-                    style={{ width: 26, height: 26, borderRadius: 999, background: "rgba(255,255,255,0.16)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, cursor: "pointer", flex: "0 0 auto" }}
-                    onClick={function () { changeHeroVolume(0.2); }}
-                  >
-                    +
-                  </div>
-                  <div style={{ fontSize: 12, flex: "0 0 auto" }}>{heroMuted ? "🔇" : "🔊"}</div>
-                </div>
-              )}
-            </>
+            <video
+              key={heroVideoUrl}
+              ref={heroVideoRef}
+              src={heroVideoUrl}
+              autoPlay
+              loop
+              muted={heroMuted}
+              controls
+              playsInline
+              webkit-playsinline="true"
+              preload="auto"
+              style={{ width: "100%", display: "block", maxHeight: 260, minHeight: 160, objectFit: "contain" as const, background: "#000" }}
+              onError={function () { setHeroErrored(true); }}
+              onVolumeChange={function () { const el = heroVideoRef.current; if (el) setHeroMuted(el.muted); }}
+            />
           ) : heroVideoUrl && heroErrored ? (
             <div style={{ padding: "26px 16px", textAlign: "center" as const, color: "rgba(255,255,255,0.85)", fontSize: 12.5 }}>This video couldn&apos;t load. Try re-uploading it as an .mp4 from the Admin page.</div>
           ) : (
@@ -710,7 +628,7 @@ export default function Home() {
                   : status === "declined"
                   ? { ...statusBadge, background: "#FCEBEB", color: "#D64545" }
                   : { ...statusBadge, background: "#F1E9FB", color: "#7C3AED" };
-                const statusLabel = status === "approved" ? "Approved" : status === "declined" ? "Declined" : "Pending";
+                const statusLabel = status === "approved" ? "Approved" : status === "declined" ? "Declined" : "Unapproved";
                 return (
                   <div key={idea.id} style={{ borderBottom: "1px solid #EEEBF4", padding: "10px 0" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
