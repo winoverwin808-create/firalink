@@ -37,6 +37,8 @@ export default function Home() {
 
   const [heroMuted, setHeroMuted] = useState(true);
   const [heroErrored, setHeroErrored] = useState(false);
+  const [heroPlaying, setHeroPlaying] = useState(false);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const [lightboxWork, setLightboxWork] = useState<any | null>(null);
   const [comments, setComments] = useState<any[]>([]);
@@ -79,6 +81,29 @@ export default function Home() {
 
   useEffect(function () {
     setHeroErrored(false);
+    setHeroPlaying(false);
+  }, [heroVideoUrl]);
+
+  function attemptHeroPlay(withSound: boolean) {
+    const el = heroVideoRef.current;
+    if (!el) return;
+    if (withSound) {
+      el.muted = false;
+      setHeroMuted(false);
+    }
+    const playResult = el.play();
+    if (playResult && typeof playResult.then === "function") {
+      playResult.then(function () { setHeroPlaying(true); }).catch(function () { setHeroPlaying(false); });
+    }
+  }
+
+  useEffect(function () {
+    if (!heroVideoUrl) return;
+    // Try silently first — this is the only kind of autoplay browsers/Telegram
+    // ever allow without a tap. If it's blocked, heroPlaying stays false and
+    // the "tap to play" button below takes over.
+    const t = setTimeout(function () { attemptHeroPlay(false); }, 150);
+    return function () { clearTimeout(t); };
   }, [heroVideoUrl]);
 
   useEffect(function () {
@@ -415,22 +440,36 @@ export default function Home() {
             <>
               <video
                 key={heroVideoUrl}
+                ref={heroVideoRef}
                 src={heroVideoUrl}
                 autoPlay
                 loop
                 muted={heroMuted}
                 playsInline
+                webkit-playsinline="true"
                 preload="auto"
-                style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover" as const }}
+                style={{ width: "100%", display: "block", maxHeight: 220, minHeight: 160, objectFit: "cover" as const, background: "#00000022" }}
                 onError={function () { setHeroErrored(true); }}
+                onPlaying={function () { setHeroPlaying(true); }}
+                onPause={function () { setHeroPlaying(false); }}
               />
-              <div
-                className="fh-hover-scale"
-                style={{ position: "absolute" as const, bottom: 10, right: 10, width: 34, height: 34, borderRadius: 999, background: "rgba(0,0,0,0.45)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, cursor: "pointer" }}
-                onClick={function () { setHeroMuted(function (m) { return !m; }); }}
-              >
-                {heroMuted ? "🔇" : "🔊"}
-              </div>
+              {!heroPlaying ? (
+                <div
+                  className="fh-hover-scale"
+                  style={{ position: "absolute" as const, inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(20,8,46,0.35)", cursor: "pointer" }}
+                  onClick={function () { attemptHeroPlay(true); }}
+                >
+                  <div style={{ width: 62, height: 62, borderRadius: 999, background: "rgba(255,255,255,0.95)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: "#5B1FA6", boxShadow: "0 8px 20px rgba(0,0,0,0.25)" }}>▶</div>
+                </div>
+              ) : (
+                <div
+                  className="fh-hover-scale"
+                  style={{ position: "absolute" as const, bottom: 10, right: 10, width: 34, height: 34, borderRadius: 999, background: "rgba(20,8,46,0.55)", backdropFilter: "blur(6px)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, cursor: "pointer" }}
+                  onClick={function () { setHeroMuted(function (m) { const next = !m; if (heroVideoRef.current) heroVideoRef.current.muted = next; return next; }); }}
+                >
+                  {heroMuted ? "🔇" : "🔊"}
+                </div>
+              )}
             </>
           ) : heroVideoUrl && heroErrored ? (
             <div style={{ padding: "26px 16px", textAlign: "center" as const, color: "rgba(255,255,255,0.85)", fontSize: 12.5 }}>This video couldn&apos;t load. Try re-uploading it as an .mp4 from the Admin page.</div>
