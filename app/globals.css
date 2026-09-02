@@ -101,11 +101,109 @@ img, video {
   animation: fh-fade-slide-up 0.25s ease both;
 }
 
+/* Login/signup screen — logo glow pulse + staggered field entrance */
+@keyframes fh-logo-glow {
+  0%, 100% { text-shadow: 0 0 12px rgba(168, 85, 247, 0.35); }
+  50% { text-shadow: 0 0 22px rgba(168, 85, 247, 0.65); }
+}
+
+@keyframes fh-logo-shimmer {
+  to { background-position: 200% center; }
+}
+
+@keyframes fh-orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-14px, 18px) scale(1.08); }
+}
+
+.fh-logo-pulse {
+  background: linear-gradient(90deg, #F5F1FF, #C9BEEA, #A855F7, #F5F1FF);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fh-logo-shimmer 5s linear infinite, fh-logo-glow 3.2s ease-in-out infinite;
+}
+
+.fh-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(40px);
+  pointer-events: none;
+  animation: fh-orb-float 9s ease-in-out infinite;
+}
+
+.fh-icon-field {
+  position: relative;
+}
+.fh-icon-field svg.fh-field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8F84B5;
+  transition: color 0.18s ease;
+  pointer-events: none;
+}
+.fh-icon-field:focus-within svg.fh-field-icon {
+  color: #D9CFFC;
+}
+.fh-icon-field input {
+  padding-left: 42px !important;
+}
+.fh-icon-field .fh-toggle-visibility {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #8F84B5;
+  display: flex;
+  transition: color 0.18s ease;
+}
+.fh-icon-field .fh-toggle-visibility:hover {
+  color: #D9CFFC;
+}
+
+.fh-btn-glow {
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 24px rgba(109, 40, 217, 0.35);
+}
+.fh-btn-glow:hover {
+  box-shadow: 0 10px 32px rgba(168, 85, 247, 0.55);
+}
+
+.fh-stagger > * {
+  opacity: 0;
+  animation: fh-fade-slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fh-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.fh-stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.fh-stagger > *:nth-child(3) { animation-delay: 0.19s; }
+.fh-stagger > *:nth-child(4) { animation-delay: 0.26s; }
+.fh-stagger > *:nth-child(5) { animation-delay: 0.33s; }
+.fh-stagger > *:nth-child(6) { animation-delay: 0.4s; }
+.fh-stagger > *:nth-child(7) { animation-delay: 0.47s; }
+
 @media (prefers-reduced-motion: reduce) {
   .fh-section, .fh-overlay, .fh-sheet, .fh-expand {
     animation: none !important;
   }
-  .fh-hover-lift, .fh-hover-scale {
+  .fh-hover-lift, .fh-hover-scale, .fh-btn-glow {
     transition: none !important;
+  }
+  .fh-logo-pulse {
+    animation: none !important;
+    background-position: 0% center;
+  }
+  .fh-orb {
+    animation: none !important;
+  }
+  .fh-stagger > * {
+    opacity: 1 !important;
+    animation: none !important;
   }
 }
