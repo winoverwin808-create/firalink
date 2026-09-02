@@ -200,6 +200,16 @@ export default function Admin() {
     loadData();
   }
 
+  async function deleteIdea(id: string) {
+    setIdeaError("");
+    const result = await supabase.from("ideas").delete().eq("id", id);
+    if (result.error) {
+      setIdeaError(result.error.message);
+      return;
+    }
+    loadData();
+  }
+
   async function deleteWork(id: string) {
     setWorkError("");
     const result = await supabase.from("works").delete().eq("id", id);
@@ -427,6 +437,7 @@ export default function Admin() {
               <div style={{ display: "flex", gap: 8 }}>
                 <button style={approveBtn} onClick={() => setIdeaStatus(idea.id, "approved")}>Approve</button>
                 <button style={declineBtn} onClick={() => setIdeaStatus(idea.id, "declined")}>Decline</button>
+                <button style={delBtn} onClick={() => deleteIdea(idea.id)}>×</button>
               </div>
             </div>
           ))
