@@ -160,66 +160,39 @@ export default function Home() {
       attachmentUrl = supabase.storage.from("uploads").getPublicUrl(path).data.publicUrl;
     }
 
-    // Re-fetch the team list fresh instead of trusting whatever was loaded
-    // when the page first opened — avoids sending a team_member_id that
-    // was deleted/changed since (stale tab), which the DB would reject
-    // with a foreign key error.
-    let teamMemberIdToSend: string | null = null;
-    let assignedMember: any = null;
-    if (ideaTeamMemberId) {
-      const freshMembers = await supabase.from("team_members").select("*");
-      const stillExists = (freshMembers.data || []).find(function (m) { return m.id === ideaTeamMemberId; });
-      if (stillExists) {
-        teamMemberIdToSend = ideaTeamMemberId;
-        assignedMember = stillExists;
-      } else {
-        setIdeaStatus("That team member no longer exists — refreshing the list, please reselect and submit again.");
-        setTeam(freshMembers.data || []);
-        setIdeaTeamMemberId("");
-        return;
-      }
-    }
+    const assignedMember = team.find(function (m) { return m.id === ideaTeamMemberId; });
 
     const insertResult = await supabase.from("ideas").insert({
       name: ideaName.trim() || "Anonymous",
       message: ideaMessage.trim(),
       status: "pending",
       attachment_url: attachmentUrl,
-      team_member_id: teamMemberIdToSend,
+      team_member_id: ideaTeamMemberId || null,
     });
     if (insertResult.error) {
       setIdeaStatus("Error: " + insertResult.error.message);
       return;
     }
 
-    let notifyWarning = "";
     if (assignedMember && assignedMember.telegram_chat_id) {
       const notifyText =
         "📩 <b>New request on Firalink Hub</b>\n\n" +
         "From: " + (ideaName.trim() || "Anonymous") + "\n" +
         "For: " + assignedMember.name + "\n\n" +
         ideaMessage.trim();
-      try {
-        const notifyResponse = await fetch("/api/notify-team", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chatId: assignedMember.telegram_chat_id, message: notifyText }),
-        });
-        const notifyData = await notifyResponse.json().catch(function () { return {}; });
-        if (!notifyResponse.ok) {
-          notifyWarning = " (Telegram notification failed: " + (notifyData.error || "unknown error") + ")";
-          console.error("notify-team failed:", notifyData);
-        }
-      } catch (err: any) {
-        notifyWarning = " (Telegram notification failed: " + (err && err.message ? err.message : "network error") + ")";
-        console.error("notify-team request threw:", err);
-      }
+      fetch("/api/notify-team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatId: assignedMember.telegram_chat_id, message: notifyText }),
+      }).catch(function () {
+        // Non-fatal — the request itself was already saved successfully above.
+      });
     }
 
     setIdeaStatus(
       assignedMember && !assignedMember.telegram_chat_id
         ? "Thanks! Your idea has been submitted (note: " + assignedMember.name + " doesn't have Telegram notifications set up yet)."
-        : "Thanks! Your idea has been submitted." + notifyWarning
+        : "Thanks! Your idea has been submitted."
     );
     setIdeaName("");
     setIdeaMessage("");
@@ -687,19 +660,13 @@ export default function Home() {
                   : status === "declined"
                   ? { ...statusBadge, background: "#FCEBEB", color: "#D64545" }
                   : { ...statusBadge, background: "#F1E9FB", color: "#7C3AED" };
-                const statusLabel = status === "approved" ? "Approved" : status === "declined" ? "Declined" : "Unapproved";
-                const assignedTo = idea.team_member_id ? team.find(function (m) { return m.id === idea.team_member_id; }) : null;
+                const statusLabel = status === "approved" ? "Approved" : status === "declined" ? "Declined" : "Pending";
                 return (
                   <div key={idea.id} style={{ borderBottom: "1px solid #EEEBF4", padding: "10px 0" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                       <strong style={{ fontSize: 13, ...wordSafe }}>{idea.name}</strong>
                       <span style={badgeStyle}>{statusLabel}</span>
                     </div>
-                    {assignedTo ? (
-                      <div style={{ fontSize: 11, color: "#7C3AED", fontWeight: 700, margin: "3px 0 0" }}>
-                        For: {assignedTo.name}{assignedTo.role ? " — " + assignedTo.role : ""}
-                      </div>
-                    ) : null}
                     <p style={{ margin: "4px 0 0", fontSize: 13, color: "#6E6B7A", ...wordSafe }}>{idea.message}</p>
                   </div>
                 );
