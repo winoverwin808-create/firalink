@@ -13,6 +13,29 @@ function isVideoType(ft: string) {
   return VIDEO_TYPES.indexOf((ft || "").toLowerCase()) !== -1;
 }
 
+// Clean line icons (currentColor) — replace emoji glyphs so the chrome
+// renders identically and crisply on every device instead of relying on
+// each phone's own emoji font.
+function Icon({ children, size = 20 }: { children: React.ReactNode; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      {children}
+    </svg>
+  );
+}
+const IconSearch = (p: { size?: number }) => <Icon {...p}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></Icon>;
+const IconBell = (p: { size?: number }) => <Icon {...p}><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></Icon>;
+const IconHome = (p: { size?: number }) => <Icon {...p}><path d="M3 11.5 12 4l9 7.5" /><path d="M5.5 10v9.5a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1V15a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.5a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1V10" /></Icon>;
+const IconPalette = (p: { size?: number }) => <Icon {...p}><path d="M12 3a9 8 0 1 0 0 16c1 0 1.6-.6 1.6-1.4 0-.4-.2-.7-.4-1-.2-.3-.4-.6-.4-1 0-.8.6-1.4 1.4-1.4H16a4 4 0 0 0 4-4c0-4-3.6-7.2-8-7.2Z" /><circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none" /><circle cx="10.5" cy="7" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="7.5" r="1" fill="currentColor" stroke="none" /></Icon>;
+const IconFilm = (p: { size?: number }) => <Icon {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M3 15h18M8 4v16M16 4v16" /></Icon>;
+const IconDoc = (p: { size?: number }) => <Icon {...p}><path d="M6 3h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" /><path d="M14 3v5h5M8 13h8M8 17h5" /></Icon>;
+const IconUsers = (p: { size?: number }) => <Icon {...p}><circle cx="9" cy="8" r="3.2" /><path d="M2.5 20c.6-3.6 3.2-6 6.5-6s5.9 2.4 6.5 6" /><circle cx="17" cy="9" r="2.6" /><path d="M15.5 14.2c2.6.4 4.6 2.4 5 5.8" /></Icon>;
+const IconHeart = (p: { size?: number; filled?: boolean }) => <Icon size={p.size}><path d="M12 20.5s-7.5-4.7-9.8-9.3C.6 7.8 2.4 4.3 6 4a5.3 5.3 0 0 1 6 3 5.3 5.3 0 0 1 6-3c3.6.3 5.4 3.8 3.8 7.2C19.5 15.8 12 20.5 12 20.5Z" fill={p.filled ? "currentColor" : "none"} /></Icon>;
+const IconStar = (p: { size?: number; filled?: boolean }) => <Icon size={p.size}><path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.3l-5.4 3.1 1-6.1-4.4-4.3 6.1-.9L12 3.5Z" fill={p.filled ? "currentColor" : "none"} /></Icon>;
+const IconDownload = (p: { size?: number }) => <Icon {...p}><path d="M12 3v12m0 0-4-4m4 4 4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></Icon>;
+const IconShare = (p: { size?: number }) => <Icon {...p}><circle cx="18" cy="5" r="2.4" /><circle cx="6" cy="12" r="2.4" /><circle cx="18" cy="19" r="2.4" /><path d="M8.1 10.7 15.9 6.3M8.1 13.3l7.8 4.4" /></Icon>;
+const IconClose = (p: { size?: number }) => <Icon {...p}><path d="M6 6l12 12M18 6 6 18" /></Icon>;
+
 export default function Home() {
   const router = useRouter();
 
@@ -389,13 +412,15 @@ export default function Home() {
   const cardChip = { background: "#fff", border: "1px solid #ECE8F5", borderRadius: 14, padding: "10px 14px", fontSize: 13, fontWeight: 600, boxShadow: "0 10px 24px rgba(107,60,180,0.08)", cursor: "pointer" as const, wordBreak: "break-word" as const };
   const cardChipActive = { ...cardChip, background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", color: "#fff", boxShadow: "0 10px 24px rgba(91,31,166,0.25)" };
   const sectionTitle = { fontFamily: "Space Grotesk, sans-serif", fontSize: 16.5, margin: "0 0 14px", fontWeight: 600 };
-  const iconBtn = { width: 40, height: 40, borderRadius: 999, background: "#fff", border: "1px solid #ECE8F5", display: "flex", alignItems: "center", justifyContent: "center", color: "#6E6B7A", cursor: "pointer", position: "relative" as const };
+  const iconBtn = { width: 40, height: 40, borderRadius: 999, background: "#fff", border: "1px solid #ECE8F5", display: "flex", alignItems: "center", justifyContent: "center", color: "#1A1523", cursor: "pointer", position: "relative" as const, boxShadow: "0 4px 12px rgba(30,20,50,0.06)" };
   const overlay = { position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 50 };
   const sheet = { background: "#fff", width: "100%", maxWidth: 430, borderRadius: "22px 22px 0 0", padding: 20, maxHeight: "70vh", overflowY: "auto" as const };
   const inputStyle = { width: "100%", border: "1px solid #ECE8F5", borderRadius: 10, padding: "10px 12px", fontSize: 13, marginBottom: 12, boxSizing: "border-box" as const };
   const btn = { width: "100%", background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", color: "#fff", fontWeight: 700, fontSize: 14, padding: "12px 0", borderRadius: 12, border: "none", cursor: "pointer" };
   const navItem = { fontSize: 10, fontWeight: 600, color: "#A6A3B0", textAlign: "center" as const, display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4, cursor: "pointer" as const };
-  const navItemActive = { ...navItem, color: "#7C3AED" };
+  const navItemActive = { ...navItem, color: "#7C3AED", fontWeight: 700 };
+  const navIconWrap = { width: 34, height: 34, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.18s ease, color 0.18s ease" };
+  const navIconWrapActive = { ...navIconWrap, background: "#F1E9FB", color: "#7C3AED" };
   const workCard = { flex: "0 0 200px", background: "#fff", border: "1px solid #ECE8F5", borderRadius: 18, overflow: "hidden", boxShadow: "0 10px 24px rgba(107,60,180,0.08)" };
   const thumb = { height: 120, background: "linear-gradient(150deg,#9B5CFC,#5B1FA6)", position: "relative" as const, overflow: "hidden" as const };
   const tinyBtn = { fontSize: 11, color: "#6E6B7A", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, marginRight: 12 };
@@ -414,7 +439,7 @@ export default function Home() {
       return <video src={w.file_url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }} onError={onBroken} />;
     }
     return (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, color: "rgba(255,255,255,0.85)" }}>📄</div>
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.85)" }}><IconDoc size={30} /></div>
     );
   }
 
@@ -429,10 +454,10 @@ export default function Home() {
         <div style={{ padding: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, ...wordSafe, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{w.title}</div>
           <div style={{ fontSize: 11, color: "#6E6B7A", marginBottom: 10, ...wordSafe }}>{creatorName(w.creator_id)} · {categoryName(w.category_id)}</div>
-          <div style={{ borderTop: "1px solid #EEEBF4", paddingTop: 8, display: "flex", flexWrap: "wrap" as const }}>
-            <span style={tinyBtn} onClick={function (e) { e.stopPropagation(); likeWork(w.id, w.likes); }}>❤️ {w.likes || 0}</span>
-            <span style={tinyBtn} onClick={function (e) { e.stopPropagation(); recommendWork(w.id, w.recommends); }}>⭐ {w.recommends || 0}</span>
-            {w.file_url ? <a href={w.file_url} target="_blank" rel="noreferrer" style={tinyBtn} onClick={function (e) { e.stopPropagation(); }}>⬇️ Download</a> : null}
+          <div style={{ borderTop: "1px solid #EEEBF4", paddingTop: 8, display: "flex", flexWrap: "wrap" as const, alignItems: "center" as const }}>
+            <span style={tinyBtn} onClick={function (e) { e.stopPropagation(); likeWork(w.id, w.likes); }}><IconHeart size={13} /> {w.likes || 0}</span>
+            <span style={tinyBtn} onClick={function (e) { e.stopPropagation(); recommendWork(w.id, w.recommends); }}><IconStar size={13} /> {w.recommends || 0}</span>
+            {w.file_url ? <a href={w.file_url} target="_blank" rel="noreferrer" style={tinyBtn} onClick={function (e) { e.stopPropagation(); }}><IconDownload size={13} /> Download</a> : null}
           </div>
         </div>
       </div>
@@ -450,15 +475,15 @@ export default function Home() {
   return (
     <div style={{ fontFamily: "Inter, sans-serif", color: "#1A1523", background: "#F5F3F9", maxWidth: 430, width: "100%", margin: "0 auto", minHeight: "100vh", paddingBottom: 90, position: "relative" as const, overflowX: "hidden" as const }}>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 20px 6px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 20px 14px", borderBottom: "1px solid #EFEBF7" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,#8B2FD9,#5B1FA6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Space Grotesk, sans-serif", fontWeight: 700, fontSize: 15, color: "#fff" }}>F</div>
           <div style={{ fontFamily: "Space Grotesk, sans-serif", fontWeight: 700, fontSize: 16.5 }}>Firalink Hub</div>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <div className="fh-hover-scale" style={iconBtn} onClick={openSearch}>🔍</div>
+          <div className="fh-hover-scale" style={iconBtn} onClick={openSearch}><IconSearch size={18} /></div>
           <div className="fh-hover-scale" style={iconBtn} onClick={openNotif}>
-            🔔
+            <IconBell size={18} />
             {unreadCount > 0 ? (
               <span style={{ position: "absolute", top: -4, right: -4, background: "#D64545", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 999, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
                 {unreadCount}
@@ -642,12 +667,22 @@ export default function Home() {
         <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>© {new Date().getFullYear()} Firalink Hub</p>
       </div>
 
-      <div style={{ position: "fixed" as const, left: "50%", transform: "translateX(-50%)", bottom: 0, width: "100%", maxWidth: 430, background: "#fff", borderTop: "1px solid #ECE8F5", display: "flex", justifyContent: "space-around", padding: "12px 6px", boxSizing: "border-box" as const, zIndex: 40 }}>
-        <div style={activeNav === "home" ? navItemActive : navItem} onClick={goHome}><span>🏠</span>Home</div>
-        <div style={activeNav === "graphics" ? navItemActive : navItem} onClick={function () { focusCategorySection("graphics"); }}><span>🎨</span>Graphics</div>
-        <div style={activeNav === "video" ? navItemActive : navItem} onClick={function () { focusCategorySection("video"); }}><span>🎬</span>Video</div>
-        <div style={activeNav === "documents" ? navItemActive : navItem} onClick={function () { focusCategorySection("documents"); }}><span>📄</span>Docs</div>
-        <div style={activeNav === "team" ? navItemActive : navItem} onClick={goToTeamSection}><span>👥</span>Team</div>
+      <div style={{ position: "fixed" as const, left: "50%", transform: "translateX(-50%)", bottom: 0, width: "100%", maxWidth: 430, background: "#fff", borderTop: "1px solid #ECE8F5", display: "flex", justifyContent: "space-around", padding: "10px 6px", boxSizing: "border-box" as const, zIndex: 40 }}>
+        <div className="fh-hover-scale" style={activeNav === "home" ? navItemActive : navItem} onClick={goHome}>
+          <span style={activeNav === "home" ? navIconWrapActive : navIconWrap}><IconHome size={18} /></span>Home
+        </div>
+        <div className="fh-hover-scale" style={activeNav === "graphics" ? navItemActive : navItem} onClick={function () { focusCategorySection("graphics"); }}>
+          <span style={activeNav === "graphics" ? navIconWrapActive : navIconWrap}><IconPalette size={18} /></span>Graphics
+        </div>
+        <div className="fh-hover-scale" style={activeNav === "video" ? navItemActive : navItem} onClick={function () { focusCategorySection("video"); }}>
+          <span style={activeNav === "video" ? navIconWrapActive : navIconWrap}><IconFilm size={18} /></span>Video
+        </div>
+        <div className="fh-hover-scale" style={activeNav === "documents" ? navItemActive : navItem} onClick={function () { focusCategorySection("documents"); }}>
+          <span style={activeNav === "documents" ? navIconWrapActive : navIconWrap}><IconDoc size={18} /></span>Docs
+        </div>
+        <div className="fh-hover-scale" style={activeNav === "team" ? navItemActive : navItem} onClick={goToTeamSection}>
+          <span style={activeNav === "team" ? navIconWrapActive : navIconWrap}><IconUsers size={18} /></span>Team
+        </div>
       </div>
 
       {showForm ? (
@@ -802,9 +837,9 @@ export default function Home() {
       {lightboxWork ? (
         <div style={{ position: "fixed" as const, inset: 0, background: "#000", zIndex: 80, maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" as const }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 10px" }}>
-            <div className="fh-hover-scale" style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.14)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }} onClick={closeLightbox}>×</div>
+            <div className="fh-hover-scale" style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.14)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }} onClick={closeLightbox}><IconClose size={16} /></div>
             <div style={{ color: "#fff", fontSize: 13, fontWeight: 700, ...wordSafe, flex: 1, margin: "0 12px", textAlign: "center" as const, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{lightboxWork.title}</div>
-            {lightboxWork.file_url ? <a href={lightboxWork.file_url} target="_blank" rel="noreferrer" style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.14)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", fontSize: 15 }}>⬇️</a> : null}
+            {lightboxWork.file_url ? <a href={lightboxWork.file_url} target="_blank" rel="noreferrer" style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.14)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}><IconDownload size={16} /></a> : null}
           </div>
 
           <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", background: "#000", minHeight: 220 }}>
@@ -814,7 +849,7 @@ export default function Home() {
               <video src={lightboxWork.file_url} controls autoPlay playsInline style={{ width: "100%", maxHeight: "50vh", display: "block" }} />
             ) : (
               <div style={{ padding: "40px 20px", textAlign: "center" as const }}>
-                <div style={{ fontSize: 44, marginBottom: 10 }}>📄</div>
+                <div style={{ marginBottom: 10, color: "rgba(255,255,255,0.85)", display: "flex", justifyContent: "center" as const }}><IconDoc size={44} /></div>
                 {lightboxWork.file_url ? <a href={lightboxWork.file_url} target="_blank" rel="noreferrer" style={{ color: "#C9A8FF", fontSize: 13, fontWeight: 700 }}>Open document</a> : null}
               </div>
             )}
@@ -822,9 +857,9 @@ export default function Home() {
 
           <div style={{ flex: 1, background: "#F5F3F9", borderRadius: "20px 20px 0 0", padding: "16px 20px 24px", overflowY: "auto" as const }}>
             <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { recommendWork(lightboxWork.id, lightboxWork.recommends); setLightboxWork(function (w: any) { return w ? { ...w, recommends: (w.recommends || 0) + 1 } : w; }); }}>⭐ Recommend</div>
-              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { shareWork(lightboxWork); }}>📤 Share</div>
-              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { likeWork(lightboxWork.id, lightboxWork.likes); setLightboxWork(function (w: any) { return w ? { ...w, likes: (w.likes || 0) + 1 } : w; }); }}>❤️ Like</div>
+              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { recommendWork(lightboxWork.id, lightboxWork.recommends); setLightboxWork(function (w: any) { return w ? { ...w, recommends: (w.recommends || 0) + 1 } : w; }); }}><IconStar size={14} /> Recommend</div>
+              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { shareWork(lightboxWork); }}><IconShare size={14} /> Share</div>
+              <div className="fh-hover-scale" style={{ ...tinyBtn, background: "#fff", border: "1px solid #ECE8F5", borderRadius: 12, padding: "9px 14px", marginRight: 0 }} onClick={function () { likeWork(lightboxWork.id, lightboxWork.likes); setLightboxWork(function (w: any) { return w ? { ...w, likes: (w.likes || 0) + 1 } : w; }); }}><IconHeart size={14} /> Like</div>
             </div>
             {shareStatus ? <p style={{ fontSize: 12, color: "#7C3AED", margin: "-8px 0 12px" }}>{shareStatus}</p> : null}
 
